@@ -1,0 +1,32 @@
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Carpetas temporales
+tmp/
+temp/
+cache/
+
+# Archivos de configuración de editores
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Archivos de entorno o credenciales
+.env
+*.log
+
+# Bases de datos locales
+*.sql
+*.sqlite
+*.db
+
+# Carpetas del entorno local
+node_modules/
+vendor/
+
+# Otros archivos no deseados
+*.bak
+*.swp
+*.zip
