@@ -1,65 +1,62 @@
 # Sistema de Gestión de Prácticas
 
-Este proyecto es una aplicación web básica desarrollada en **PHP**, **MySQL** y **Bootstrap**, orientada a la **gestión de prácticas profesionales de estudiantes**. Su propósito inicial es facilitar el control personal de los procesos de práctica, con la opción de ampliarlo y compartirlo con otros docentes en el futuro.
+Este es un sistema web desarrollado en **PHP**, **MySQL** y **Bootstrap** para gestionar estudiantes en práctica, empresas, y sus relaciones. Permite registrar, editar y eliminar información de manera sencilla y estructurada.
 
 ---
 
-## 📦 Estructura del Proyecto
+## 🧱 Estructura del Proyecto
 
 gestion-practicas/
-├── index.php # Redirige al módulo principal
+├── index.php
 ├── includes/
-│ └── db.php # Conexión a la base de datos (PDO)
+│ └── db.php
 ├── estudiantes/
-│ ├── crear.php # Formulario para agregar estudiante
-│ ├── editar.php # Formulario para editar estudiante
-│ ├── eliminar.php # Elimina estudiante por ID
-│ └── listar.php # Tabla con todos los estudiantes
-└── sql/
-└── base_datos_inicial.sql # Script para crear la BD y tabla
-
-
----
-
-## ⚙️ Instalación local (con XAMPP)
-
-1. Clona o descarga este repositorio en la carpeta:
-C:\xampp\htdocs\
-
-2. Abre XAMPP y asegúrate de que **Apache** y **MySQL** estén activos.
-
-3. Entra a [http://localhost/phpmyadmin](http://localhost/phpmyadmin) y ejecuta el script SQL ubicado en `sql/base_datos_inicial.sql`.
-
-4. Abre tu navegador y accede a:
-http://localhost/gestion-practicas
-
+│ ├── listar.php
+│ ├── crear.php
+│ ├── editar.php
+│ └── eliminar.php
+├── empresas/
+│ ├── listar.php
+│ ├── crear.php
+│ ├── editar.php
+│ └── eliminar.php
+├── sql/
+│ └── base_datos_inicial.sql
+└── README.md
 
 ---
 
-## 🧪 Funcionalidades actuales
+## 🔗 Relaciones e integridad referencial
 
-✅ CRUD completo para estudiantes:
-
-- Crear estudiante  
-- Editar estudiante  
-- Eliminar estudiante  
-- Ver todos los estudiantes registrados
+- Cada **estudiante** puede estar asociado a **una empresa** mediante el campo `empresa_id`
+- Se utiliza **clave foránea** con `ON DELETE SET NULL` y `ON UPDATE CASCADE`
+- Las empresas se gestionan de forma independiente desde el módulo `empresas/`
 
 ---
 
-## 🚀 Próximos módulos sugeridos
+## ⚙️ Funcionalidades actuales
 
-- Gestión de empresas y supervisores  
-- Registro de prácticas asignadas  
-- Seguimiento de informes (Hito 1, Hito 2, Evaluación final)  
-- Rúbricas y retroalimentación  
-- Exportación de datos
+✅ CRUD completo de:
+- Estudiantes (con vínculo a empresas)
+- Empresas
 
----
-
-## 💡 Licencia
-
-Este proyecto es de uso libre para fines educativos. Si lo modificas y mejoras, ¡siéntete libre de compartirlo!
+🧩 Relaciones:
+- Listar estudiantes con nombre de empresa
+- Seleccionar empresa desde menú desplegable al crear/editar estudiante
 
 ---
 
+## 🛠 Cómo instalar localmente (XAMPP)
+
+1. Clona este repositorio en: `C:\xampp\htdocs\`
+2. Abre `http://localhost/phpmyadmin`
+3. Crea la base de datos `gestion_practicas`
+4. Importa el archivo: `sql/base_datos_inicial.sql`
+5. Inicia Apache y MySQL desde XAMPP
+6. Abre en tu navegador: `http://localhost/gestion-practicas/`
+
+---
+
+## 💬 Créditos
+
+Desarrollado por Oscar Zúñiga como proyecto de gestión de prácticas profesionales para docentes.
