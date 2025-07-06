@@ -7,10 +7,10 @@
 </head>
 <body class="container mt-5">
 
-<h2>Lista de Estudiantes</h2>
+<h2 class="mb-4">Lista de Estudiantes en Práctica</h2>
 <a href="crear.php" class="btn btn-primary mb-3">Agregar Estudiante</a>
 
-<table class="table table-bordered">
+<table class="table table-bordered table-striped table-hover">
     <thead class="table-dark">
         <tr>
             <th>ID</th>
@@ -19,12 +19,22 @@
             <th>Email</th>
             <th>Carrera</th>
             <th>Teléfono</th>
+            <th>Programa</th>
+            <th>Asignatura</th>
+            <th>Empresa</th>
+            <th>Inicio</th>
+            <th>Fin</th>
             <th>Acciones</th>
         </tr>
     </thead>
     <tbody>
         <?php
-        $stmt = $pdo->query("SELECT * FROM estudiantes ORDER BY id DESC");
+        // Obtener estudiantes y sus empresas (si están asociadas)
+        $stmt = $pdo->query("SELECT e.*, emp.nombre AS empresa_nombre
+                             FROM estudiantes e
+                             LEFT JOIN empresas emp ON e.empresa_id = emp.id
+                             ORDER BY e.id DESC");
+
         while ($row = $stmt->fetch()):
         ?>
         <tr>
@@ -34,6 +44,11 @@
             <td><?= $row['email'] ?></td>
             <td><?= $row['carrera'] ?></td>
             <td><?= $row['telefono'] ?></td>
+            <td><?= $row['programa'] ?></td>
+            <td><?= $row['asignatura'] ?></td>
+            <td><?= $row['empresa_nombre'] ?? 'Sin asignar' ?></td>
+            <td><?= $row['fecha_inicio'] ? date('d-m-Y', strtotime($row['fecha_inicio'])) : '' ?></td>
+            <td><?= $row['fecha_fin'] ? date('d-m-Y', strtotime($row['fecha_fin'])) : '' ?></td>
             <td>
                 <a href="editar.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Editar</a>
                 <a href="eliminar.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de eliminar este estudiante?')">Eliminar</a>

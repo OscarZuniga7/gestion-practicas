@@ -1,10 +1,23 @@
 # Sistema de Gestión de Prácticas
 
-Este es un sistema web desarrollado en **PHP**, **MySQL** y **Bootstrap** para gestionar estudiantes en práctica, empresas, y sus relaciones. Permite registrar, editar y eliminar información de manera sencilla y estructurada.
+Este proyecto es una aplicación web desarrollada en **PHP**, **MySQL** y **Bootstrap**, diseñada para gestionar de manera organizada la información relacionada con **prácticas profesionales de estudiantes universitarios**.
 
 ---
 
-## 🧱 Estructura del Proyecto
+## 🧩 Funcionalidades actuales
+
+- CRUD completo de:
+  - Estudiantes
+  - Empresas
+  - Supervisores externos
+
+- Relaciones con integridad referencial:
+  - Cada estudiante está vinculado a una empresa (`empresa_id`)
+  - Cada supervisor externo también está vinculado a una empresa (`empresa_id`)
+
+---
+
+## 🗂️ Estructura del Proyecto
 
 gestion-practicas/
 ├── index.php
@@ -20,43 +33,74 @@ gestion-practicas/
 │ ├── crear.php
 │ ├── editar.php
 │ └── eliminar.php
+├── supervisores/
+│ ├── listar.php
+│ ├── crear.php
+│ ├── editar.php
+│ └── eliminar.php
 ├── sql/
 │ └── base_datos_inicial.sql
 └── README.md
 
----
-
-## 🔗 Relaciones e integridad referencial
-
-- Cada **estudiante** puede estar asociado a **una empresa** mediante el campo `empresa_id`
-- Se utiliza **clave foránea** con `ON DELETE SET NULL` y `ON UPDATE CASCADE`
-- Las empresas se gestionan de forma independiente desde el módulo `empresas/`
 
 ---
 
-## ⚙️ Funcionalidades actuales
+## 🧪 Caso real de ejemplo incluido
 
-✅ CRUD completo de:
-- Estudiantes (con vínculo a empresas)
-- Empresas
+En el archivo `base_datos_inicial.sql` se incluye el siguiente caso real modelado en el sistema:
 
-🧩 Relaciones:
-- Listar estudiantes con nombre de empresa
-- Seleccionar empresa desde menú desplegable al crear/editar estudiante
+### Estudiante:
+- **Nombre:** Nicolás Andrés Baeza Pereira
+- **RUT:** 20269725-9
+- **Programa:** UNAB12100
+- **Asignatura:** Práctica I
+- **Correo:** n.baezapereira@uandresbello.edu
+- **Empresa:** Universidad Andrés Bello
+- **Fecha Inicio / Fin:** 10-03-2025 a 02-06-2025
+
+### Empresa:
+- **Nombre:** Universidad Andrés Bello
+- **RUT:** 60803000-0
+- **Rubro:** Educación superior
+- **Dirección:** Av. República 239, Santiago
+- **Teléfono:** 226123456
+
+### Supervisor Externo:
+- **Nombre:** Armando Tamponi
+- **Cargo:** Docente UNAB / Supervisor Externo
+- **Correo:** arm.munoz@uandresbello.edu
+- **Teléfono:** +56993997982
+- **Empresa asociada:** Universidad Andrés Bello
 
 ---
 
-## 🛠 Cómo instalar localmente (XAMPP)
+## ⚙️ Cómo usar este sistema localmente
 
-1. Clona este repositorio en: `C:\xampp\htdocs\`
-2. Abre `http://localhost/phpmyadmin`
-3. Crea la base de datos `gestion_practicas`
-4. Importa el archivo: `sql/base_datos_inicial.sql`
-5. Inicia Apache y MySQL desde XAMPP
-6. Abre en tu navegador: `http://localhost/gestion-practicas/`
+1. Clona o copia este repositorio en:  
+   `C:\xampp\htdocs\gestion-practicas`
+
+2. Abre [http://localhost/phpmyadmin](http://localhost/phpmyadmin) y:
+   - Crea la base de datos `gestion_practicas`
+   - Importa el archivo `sql/base_datos_inicial.sql`
+
+3. Abre XAMPP y activa **Apache** y **MySQL**
+
+4. Accede al sistema en:  
+   [http://localhost/gestion-practicas](http://localhost/gestion-practicas)
 
 ---
 
-## 💬 Créditos
+## 📚 Futuras extensiones sugeridas
 
-Desarrollado por Oscar Zúñiga como proyecto de gestión de prácticas profesionales para docentes.
+- Registro de entrevistas y evaluaciones por parte del supervisor externo
+- Vinculación estudiante ↔ supervisor directamente (opcional)
+- Reportes exportables a PDF o Excel
+- Panel resumen tipo dashboard
+
+---
+
+## 👨‍🏫 Autor
+
+Desarrollado por **Oscar Zúñiga** como solución práctica y adaptable para docentes universitarios a cargo de la supervisión de prácticas profesionales.
+
+---
