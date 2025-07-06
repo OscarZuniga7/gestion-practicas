@@ -104,3 +104,23 @@ En el archivo `base_datos_inicial.sql` se incluye el siguiente caso real modelad
 Desarrollado por **Oscar Zúñiga** como solución práctica y adaptable para docentes universitarios a cargo de la supervisión de prácticas profesionales.
 
 ---
+
+### 📎 Manejo de Archivos en Informes
+
+El sistema permite registrar archivos asociados a informes de práctica bajo dos modalidades:
+
+#### ✅ Opción 1: Archivos locales (modo tradicional)
+- Deben ubicarse en la carpeta `/archivos/` dentro del proyecto local.
+- En el formulario de creación/edición (`crear.php`, `editar.php`), basta con escribir el nombre del archivo, por ejemplo:
+hito1_constanza.pdf
+- En la lista de informes (`listar.php`), el archivo se abrirá desde el servidor local al hacer clic.
+
+#### ✅ Opción 2: Archivos externos (SharePoint, OneDrive, etc.)
+- Se debe pegar la **URL pública o compartida** del archivo, por ejemplo:
+
+https://uandresbelloedu.sharepoint.com/.../Informe_Practica1_Constanza.pdf
+
+- El sistema detectará automáticamente si se trata de una URL y la abrirá correctamente en una nueva pestaña.
+- Ideal para archivos almacenados en OneDrive o SharePoint corporativo.
+
+> 💡 Esta flexibilidad permite integrar almacenamiento local y en la nube, ideal para contextos universitarios o docentes que trabajan con plataformas institucionales.
