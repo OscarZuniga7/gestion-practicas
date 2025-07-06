@@ -10,10 +10,15 @@ Este proyecto es una aplicación web desarrollada en **PHP**, **MySQL** y **Boot
   - Estudiantes
   - Empresas
   - Supervisores externos
+  - Informes por hito
+  - Evaluaciones por estudiante
+  - Hitos (catálogo editable)
 
 - Relaciones con integridad referencial:
   - Cada estudiante está vinculado a una empresa (`empresa_id`)
   - Cada supervisor externo también está vinculado a una empresa (`empresa_id`)
+  - Cada informe se vincula a un estudiante y a un hito
+  - Cada evaluación se vincula a un estudiante (y opcionalmente a un hito)
 
 ---
 
@@ -38,8 +43,24 @@ gestion-practicas/
 │ ├── crear.php
 │ ├── editar.php
 │ └── eliminar.php
+├── hitos/
+│ ├── listar.php
+│ ├── crear.php
+│ ├── editar.php
+│ └── eliminar.php
+├── informes/
+│ ├── listar.php
+│ ├── crear.php
+│ ├── editar.php
+│ └── eliminar.php
+├── evaluaciones/
+│ ├── listar.php
+│ ├── crear.php
+│ ├── editar.php
+│ └── eliminar.php
 ├── sql/
-│ └── base_datos_inicial.sql
+│ ├── base_datos_inicial.sql
+│ └── base_datos_hitos_informes_evaluaciones.sql
 └── README.md
 
 
@@ -47,7 +68,7 @@ gestion-practicas/
 
 ## 🧪 Caso real de ejemplo incluido
 
-En el archivo `base_datos_inicial.sql` se incluye el siguiente caso real modelado en el sistema:
+En el archivo `sql/base_datos_inicial.sql` se incluye el siguiente caso real modelado en el sistema:
 
 ### Estudiante:
 - **Nombre:** Nicolás Andrés Baeza Pereira
@@ -74,6 +95,33 @@ En el archivo `base_datos_inicial.sql` se incluye el siguiente caso real modelad
 
 ---
 
+## 🧱 Base de datos
+
+Este proyecto utiliza dos archivos de configuración inicial:
+
+- `sql/base_datos_inicial.sql` → estructura y datos base de estudiantes, empresas y supervisores.
+- `sql/base_datos_hitos_informes_evaluaciones.sql` → estructura y datos iniciales para hitos, informes y evaluaciones.
+
+Incluye integridad referencial con claves foráneas y eliminación en cascada (`ON DELETE CASCADE`).
+
+---
+
+## 📄 Manejo de Archivos en Informes y Evaluaciones
+
+El sistema permite registrar archivos asociados a informes o evaluaciones bajo dos modalidades:
+
+### ✅ Opción 1: Archivos locales
+- Se guardan en una carpeta como `/archivos/`
+- Solo es necesario escribir el nombre del archivo (ej: `hito1_constanza.pdf`)
+- Se abrirán desde el mismo servidor local (`localhost`)
+
+### ✅ Opción 2: Archivos externos en la nube (OneDrive / SharePoint)
+- Copiar la URL pública o compartida desde OneDrive
+- El sistema detecta si la URL comienza con `http` y genera automáticamente un enlace externo
+- Ideal para universidades que trabajan con SharePoint / OneDrive institucional
+
+---
+
 ## ⚙️ Cómo usar este sistema localmente
 
 1. Clona o copia este repositorio en:  
@@ -81,46 +129,39 @@ En el archivo `base_datos_inicial.sql` se incluye el siguiente caso real modelad
 
 2. Abre [http://localhost/phpmyadmin](http://localhost/phpmyadmin) y:
    - Crea la base de datos `gestion_practicas`
-   - Importa el archivo `sql/base_datos_inicial.sql`
+   - Importa ambos archivos:
+     - `sql/base_datos_inicial.sql`
+     - `sql/base_datos_hitos_informes_evaluaciones.sql`
 
-3. Abre XAMPP y activa **Apache** y **MySQL**
+3. Inicia **Apache** y **MySQL** desde XAMPP
 
 4. Accede al sistema en:  
    [http://localhost/gestion-practicas](http://localhost/gestion-practicas)
 
 ---
 
+## 🧠 Evaluaciones según directriz UNAB
+
+La evaluación de estudiantes se basa en hitos establecidos por la universidad, incluyendo:
+
+- Informe Hito 1 (plan de trabajo)
+- Informe Hito 2 (avance o cierre)
+- Evaluación final por parte del supervisor
+
+El módulo `evaluaciones/` permite registrar la nota, observaciones, fecha y un enlace a la rúbrica o acta en formato PDF.
+
+---
+
 ## 📚 Futuras extensiones sugeridas
 
-- Registro de entrevistas y evaluaciones por parte del supervisor externo
-- Vinculación estudiante ↔ supervisor directamente (opcional)
-- Reportes exportables a PDF o Excel
-- Panel resumen tipo dashboard
+- Registro de entrevistas por parte del supervisor
+- Asociación directa estudiante ↔ supervisor (además de empresa)
+- Dashboard de resumen por periodo académico
+- Exportar informes y notas a PDF o Excel
+- Notificaciones por correo
 
 ---
 
 ## 👨‍🏫 Autor
 
 Desarrollado por **Oscar Zúñiga** como solución práctica y adaptable para docentes universitarios a cargo de la supervisión de prácticas profesionales.
-
----
-
-### 📎 Manejo de Archivos en Informes
-
-El sistema permite registrar archivos asociados a informes de práctica bajo dos modalidades:
-
-#### ✅ Opción 1: Archivos locales (modo tradicional)
-- Deben ubicarse en la carpeta `/archivos/` dentro del proyecto local.
-- En el formulario de creación/edición (`crear.php`, `editar.php`), basta con escribir el nombre del archivo, por ejemplo:
-hito1_constanza.pdf
-- En la lista de informes (`listar.php`), el archivo se abrirá desde el servidor local al hacer clic.
-
-#### ✅ Opción 2: Archivos externos (SharePoint, OneDrive, etc.)
-- Se debe pegar la **URL pública o compartida** del archivo, por ejemplo:
-
-https://uandresbelloedu.sharepoint.com/.../Informe_Practica1_Constanza.pdf
-
-- El sistema detectará automáticamente si se trata de una URL y la abrirá correctamente en una nueva pestaña.
-- Ideal para archivos almacenados en OneDrive o SharePoint corporativo.
-
-> 💡 Esta flexibilidad permite integrar almacenamiento local y en la nube, ideal para contextos universitarios o docentes que trabajan con plataformas institucionales.
