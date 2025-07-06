@@ -1,6 +1,6 @@
 <?php
-require_once('../includes/db.php');
-// include('../includes/header.php');
+include('../includes/header.php');
+include('../includes/db.php'); 
 ?>
 
 <!DOCTYPE html>
@@ -58,5 +58,6 @@ require_once('../includes/db.php');
         </tbody>
     </table>
 </div>
+<?php include('../includes/footer.php'); ?>
 </body>
 </html>

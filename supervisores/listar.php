@@ -1,4 +1,7 @@
-<?php include('../includes/db.php'); ?>
+<?php
+include('../includes/header.php');
+include('../includes/db.php'); 
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -47,6 +50,6 @@
         <?php endwhile; ?>
     </tbody>
 </table>
-
+<?php include('../includes/footer.php'); ?>
 </body>
 </html>
