@@ -1,4 +1,7 @@
-<?php include('../includes/db.php'); ?>
+<?php 
+include('../includes/db.php');
+include('../includes/header.php'); 
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -52,6 +55,6 @@ if (isset($_POST['guardar'])) {
     echo "<div class='alert alert-success mt-3'>Supervisor registrado exitosamente.</div>";
 }
 ?>
-
+<?php include('../includes/footer.php'); ?>
 </body>
 </html>

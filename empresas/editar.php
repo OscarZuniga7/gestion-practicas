@@ -1,5 +1,6 @@
 <?php
 include('../includes/db.php');
+include('../includes/header.php');
 
 if (!isset($_GET['id'])) {
     die('ID de empresa no proporcionado.');
@@ -67,6 +68,6 @@ if (!$empresa) {
     <button class="btn btn-success" type="submit">Actualizar</button>
     <a class="btn btn-secondary" href="listar.php">Cancelar</a>
 </form>
-
+<?php include('../includes/footer.php'); ?>
 </body>
 </html>

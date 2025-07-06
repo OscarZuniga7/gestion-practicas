@@ -1,5 +1,6 @@
 <?php
 include('../includes/db.php');
+include('../includes/header.php');
 
 if (!isset($_GET['id'])) {
     echo "ID de evaluación no especificado.";
@@ -112,5 +113,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <a href="listar.php" class="btn btn-secondary">Volver</a>
     </form>
 </div>
+<?php include('../includes/footer.php'); ?>
 </body>
 </html>

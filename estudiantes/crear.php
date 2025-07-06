@@ -1,4 +1,7 @@
-<?php include('../includes/db.php'); ?>
+<?php 
+include('../includes/db.php');
+include('../includes/header.php'); 
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -58,6 +61,6 @@ $stmt->execute([
     echo "<div class='alert alert-success mt-3'>Estudiante agregado correctamente.</div>";
 }
 ?>
-
+<?php include('../includes/footer.php'); ?>
 </body>
 </html>

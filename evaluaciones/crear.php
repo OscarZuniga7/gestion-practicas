@@ -1,5 +1,6 @@
 <?php
 require_once('../includes/db.php');
+include('../includes/header.php');
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $estudiante_id = $_POST['estudiante_id'];
@@ -82,5 +83,6 @@ $hitos = $pdo->query("SELECT id, nombre FROM hitos ORDER BY id")->fetchAll();
         <a href="listar.php" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>
+<?php include('../includes/footer.php'); ?>
 </body>
 </html>
