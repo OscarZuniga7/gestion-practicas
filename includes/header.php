@@ -23,6 +23,7 @@
         <li class="nav-item"><a class="nav-link" href="/gestion-practicas/hitos/listar.php">Hitos</a></li>
         <li class="nav-item"><a class="nav-link" href="/gestion-practicas/informes/listar.php">Informes</a></li>
         <li class="nav-item"><a class="nav-link" href="/gestion-practicas/evaluaciones/listar.php">Evaluaciones</a></li>
+        <li class="nav-item"><a class="nav-link" href="/gestion-practicas/entrevistas/listar.php">Entrevistas</a></li>
       </ul>
     </div>
   </div>
