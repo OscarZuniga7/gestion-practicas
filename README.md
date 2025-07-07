@@ -10,15 +10,18 @@ Este proyecto es una aplicación web desarrollada en **PHP**, **MySQL** y **Boot
   - Estudiantes
   - Empresas
   - Supervisores externos
-  - Informes por hito
-  - Evaluaciones por estudiante
-  - Hitos (catálogo editable)
+  - Informes de práctica
+  - Hitos de avance
+  - Evaluaciones
+  - **Entrevistas** (registro de reuniones entre docente y estudiante o con supervisor externo)
 
 - Relaciones con integridad referencial:
   - Cada estudiante está vinculado a una empresa (`empresa_id`)
   - Cada supervisor externo también está vinculado a una empresa (`empresa_id`)
-  - Cada informe se vincula a un estudiante y a un hito
-  - Cada evaluación se vincula a un estudiante (y opcionalmente a un hito)
+  - Cada entrevista está vinculada a:
+    - un estudiante (`estudiante_id`)
+    - un hito (`hito_id`)
+    - un supervisor externo opcional (`supervisor_id`)
 
 ---
 
@@ -27,7 +30,9 @@ Este proyecto es una aplicación web desarrollada en **PHP**, **MySQL** y **Boot
 gestion-practicas/
 ├── index.php
 ├── includes/
-│ └── db.php
+│ ├── db.php
+│ ├── header.php
+│ └── footer.php
 ├── estudiantes/
 │ ├── listar.php
 │ ├── crear.php
@@ -58,17 +63,22 @@ gestion-practicas/
 │ ├── crear.php
 │ ├── editar.php
 │ └── eliminar.php
+├── entrevistas/
+│ ├── listar.php
+│ ├── crear.php
+│ ├── editar.php
+│ └── eliminar.php
 ├── sql/
 │ ├── base_datos_inicial.sql
-│ └── base_datos_hitos_informes_evaluaciones.sql
+│ ├── base_datos_hitos_informes_evaluaciones.sql
+│ └── base_datos_entrevistas.sql
 └── README.md
-
 
 ---
 
 ## 🧪 Caso real de ejemplo incluido
 
-En el archivo `sql/base_datos_inicial.sql` se incluye el siguiente caso real modelado en el sistema:
+En el archivo `base_datos_inicial.sql` se incluye el siguiente caso real modelado en el sistema:
 
 ### Estudiante:
 - **Nombre:** Nicolás Andrés Baeza Pereira
@@ -95,30 +105,20 @@ En el archivo `sql/base_datos_inicial.sql` se incluye el siguiente caso real mod
 
 ---
 
-## 🧱 Base de datos
+## 📝 Módulo de Entrevistas
 
-Este proyecto utiliza dos archivos de configuración inicial:
+Este módulo permite registrar y consultar las entrevistas realizadas durante el proceso de práctica. Cada entrevista puede incluir:
 
-- `sql/base_datos_inicial.sql` → estructura y datos base de estudiantes, empresas y supervisores.
-- `sql/base_datos_hitos_informes_evaluaciones.sql` → estructura y datos iniciales para hitos, informes y evaluaciones.
+- Fecha de la entrevista
+- Modalidad (presencial, online, etc.)
+- Comentarios o notas breves
+- URL de evidencia (acta en PDF, enlace a SharePoint, etc.)
+- Asociación a un **estudiante**, un **hito** y opcionalmente un **supervisor externo**
 
-Incluye integridad referencial con claves foráneas y eliminación en cascada (`ON DELETE CASCADE`).
+Además:
 
----
-
-## 📄 Manejo de Archivos en Informes y Evaluaciones
-
-El sistema permite registrar archivos asociados a informes o evaluaciones bajo dos modalidades:
-
-### ✅ Opción 1: Archivos locales
-- Se guardan en una carpeta como `/archivos/`
-- Solo es necesario escribir el nombre del archivo (ej: `hito1_constanza.pdf`)
-- Se abrirán desde el mismo servidor local (`localhost`)
-
-### ✅ Opción 2: Archivos externos en la nube (OneDrive / SharePoint)
-- Copiar la URL pública o compartida desde OneDrive
-- El sistema detecta si la URL comienza con `http` y genera automáticamente un enlace externo
-- Ideal para universidades que trabajan con SharePoint / OneDrive institucional
+- El sistema permite **ver el acta o evidencia** en una nueva pestaña si se trata de un enlace.
+- La tabla `entrevistas` está documentada en el archivo `sql/base_datos_entrevistas.sql`
 
 ---
 
@@ -129,39 +129,45 @@ El sistema permite registrar archivos asociados a informes o evaluaciones bajo d
 
 2. Abre [http://localhost/phpmyadmin](http://localhost/phpmyadmin) y:
    - Crea la base de datos `gestion_practicas`
-   - Importa ambos archivos:
-     - `sql/base_datos_inicial.sql`
-     - `sql/base_datos_hitos_informes_evaluaciones.sql`
+   - Importa el archivo `sql/base_datos_inicial.sql`
+   - Importa también `sql/base_datos_hitos_informes_evaluaciones.sql` y `sql/base_datos_entrevistas.sql` si deseas utilizar los módulos extendidos
 
-3. Inicia **Apache** y **MySQL** desde XAMPP
+3. Abre XAMPP y activa **Apache** y **MySQL**
 
 4. Accede al sistema en:  
    [http://localhost/gestion-practicas](http://localhost/gestion-practicas)
 
 ---
 
-## 🧠 Evaluaciones según directriz UNAB
-
-La evaluación de estudiantes se basa en hitos establecidos por la universidad, incluyendo:
-
-- Informe Hito 1 (plan de trabajo)
-- Informe Hito 2 (avance o cierre)
-- Evaluación final por parte del supervisor
-
-El módulo `evaluaciones/` permite registrar la nota, observaciones, fecha y un enlace a la rúbrica o acta en formato PDF.
-
----
-
 ## 📚 Futuras extensiones sugeridas
 
-- Registro de entrevistas por parte del supervisor
-- Asociación directa estudiante ↔ supervisor (además de empresa)
-- Dashboard de resumen por periodo académico
-- Exportar informes y notas a PDF o Excel
-- Notificaciones por correo
+- Registro de entrevistas y evaluaciones por parte del supervisor externo
+- Vinculación estudiante ↔ supervisor directamente (opcional)
+- Reportes exportables a PDF o Excel
+- Panel resumen tipo dashboard
 
 ---
 
 ## 👨‍🏫 Autor
 
 Desarrollado por **Oscar Zúñiga** como solución práctica y adaptable para docentes universitarios a cargo de la supervisión de prácticas profesionales.
+
+---
+
+### 📎 Manejo de Archivos en Informes
+
+El sistema permite registrar archivos asociados a informes de práctica bajo dos modalidades:
+
+#### ✅ Opción 1: Archivos locales (modo tradicional)
+- Deben ubicarse en la carpeta `/archivos/` dentro del proyecto local.
+- En el formulario de creación/edición (`crear.php`, `editar.php`), basta con escribir el nombre del archivo, por ejemplo:
+  `hito1_constanza.pdf`
+- En la lista de informes (`listar.php`), el archivo se abrirá desde el servidor local al hacer clic.
+
+#### ✅ Opción 2: Archivos externos (SharePoint, OneDrive, etc.)
+- Se debe pegar la **URL pública o compartida** del archivo, por ejemplo:
+  `https://uandresbelloedu.sharepoint.com/.../Informe_Practica1_Constanza.pdf`
+- El sistema detectará automáticamente si se trata de una URL y la abrirá correctamente en una nueva pestaña.
+- Ideal para archivos almacenados en OneDrive o SharePoint corporativo.
+
+> 💡 Esta flexibilidad permite integrar almacenamiento local y en la nube, ideal para contextos universitarios o docentes que trabajan con plataformas institucionales.
