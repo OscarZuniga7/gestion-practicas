@@ -29,7 +29,7 @@ if (isset($_POST['guardar'])) {
                            VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->execute([
         $_POST['nombre'],
-        $_POST['rut'],
+        !empty($_POST['rut']) ? $_POST['rut'] : null,
         $_POST['rubro'],
         $_POST['direccion'],
         $_POST['telefono'],

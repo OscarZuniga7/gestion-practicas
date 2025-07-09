@@ -20,15 +20,22 @@ include('../includes/header.php');
     <input class="form-control mb-2" type="text" name="telefono" placeholder="Teléfono">
     <input class="form-control mb-2" type="text" name="programa" placeholder="Programa (ej: UNAB12100)">
     <input class="form-control mb-2" type="text" name="asignatura" placeholder="Asignatura (ej: PRACTICA I)">
-    <label class="form-label">Empresa</label>
-    <select class="form-select mb-2" name="empresa_id">
-    <option value="">-- Seleccione una empresa --</option>
     <?php
     $empresas = $pdo->query("SELECT id, nombre FROM empresas ORDER BY nombre");
-    foreach ($empresas as $e):
-    ?>
+
+    if ($empresas->rowCount() === 0): ?>
+    <div class="alert alert-warning">
+        <strong>Atención:</strong> No hay empresas registradas. 
+        <a href="../empresas/crear.php" class="btn btn-sm btn-outline-primary ms-2">Crear Empresa</a>
+    </div>
+    <?php endif; ?>
+
+    <label class="form-label">Empresa</label>
+    <select class="form-select mb-2" name="empresa_id" <?= ($empresas->rowCount() === 0) ? 'disabled' : '' ?>>
+        <option value="">-- Seleccione una empresa --</option>
+        <?php foreach ($empresas as $e): ?>
         <option value="<?= $e['id'] ?>"><?= $e['nombre'] ?></option>
-    <?php endforeach; ?>
+        <?php endforeach; ?>
     </select>
     <label class="form-label">Fecha de Inicio</label>
     <input class="form-control mb-2" type="date" name="fecha_inicio" placeholder="Fecha de inicio">
