@@ -2,10 +2,11 @@
 // entrevistas/crear.php
 include('../includes/db.php');
 include('../includes/header.php');
+$tipo_supervisor = 'interno';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $stmt = $pdo->prepare("INSERT INTO entrevistas (estudiante_id, hito_id, fecha, modalidad, evidencia_url, comentarios, supervisor_id)
-                            VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO entrevistas (estudiante_id, hito_id, fecha, modalidad, evidencia_url, comentarios, supervisor_id, tipo_supervisor)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
     $stmt->execute([
         $_POST['estudiante_id'],
@@ -23,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $estudiantes = $pdo->query("SELECT id, nombre FROM estudiantes ORDER BY nombre");
 $hitos = $pdo->query("SELECT id, nombre FROM hitos ORDER BY nombre");
-$supervisores = $pdo->query("SELECT id, nombre FROM supervisores ORDER BY nombre");
+$supervisores = $pdo->query("SELECT id, nombre, tipo FROM supervisores ORDER BY nombre");
 ?>
 
 <div class="container mt-5">
@@ -57,13 +58,20 @@ $supervisores = $pdo->query("SELECT id, nombre FROM supervisores ORDER BY nombre
         <label class="form-label">Comentarios</label>
         <textarea class="form-control mb-2" name="comentarios"></textarea>
 
-        <label class="form-label">Supervisor Externo (opcional)</label>
+        <label class="form-label">Supervisor</label>
         <select class="form-select mb-3" name="supervisor_id">
-            <option value="">Sin supervisor externo</option>
+            <option value="">Sin supervisor</option>
             <?php foreach ($supervisores as $s): ?>
                 <option value="<?= $s['id'] ?>"><?= $s['nombre'] ?></option>
             <?php endforeach; ?>
         </select>
+        <div class="mb-3">
+        <label for="tipo_supervisor" class="form-label">Tipo de Supervisor</label>
+        <select name="tipo_supervisor" class="form-select" required>
+            <option value="interno" <?= $tipo_supervisor == 'interno' ? 'selected' : '' ?>>Interno</option>
+            <option value="externo" <?= $tipo_supervisor == 'externo' ? 'selected' : '' ?>>Externo</option>
+        </select>
+</div>
 
         <button class="btn btn-success">Guardar</button>
         <a class="btn btn-secondary" href="listar.php">Cancelar</a>

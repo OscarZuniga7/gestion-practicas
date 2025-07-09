@@ -2,6 +2,7 @@
 // entrevistas/editar.php
 include('../includes/db.php');
 include('../includes/header.php');
+$tipo_supervisor = 'interno';
 
 if (!isset($_GET['id'])) {
     die('ID de entrevista no proporcionado.');
@@ -10,7 +11,7 @@ if (!isset($_GET['id'])) {
 $id = $_GET['id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $stmt = $pdo->prepare("UPDATE entrevistas SET estudiante_id = ?, hito_id = ?, fecha = ?, modalidad = ?, evidencia_url = ?, comentarios = ?, supervisor_id = ? WHERE id = ?");
+    $stmt = $pdo->prepare("UPDATE entrevistas SET estudiante_id = ?, hito_id = ?, fecha = ?, modalidad = ?, evidencia_url = ?, comentarios = ?, supervisor_id = ?, tipo_supervisor = ? WHERE id = ?");
     $stmt->execute([
         $_POST['estudiante_id'],
         $_POST['hito_id'],
@@ -19,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_POST['evidencia_url'],
         $_POST['comentarios'],
         $_POST['supervisor_id'] ?: null,
+        $_POST['tipo_supervisor'],
         $id
     ]);
 
@@ -73,6 +75,14 @@ $supervisores = $pdo->query("SELECT id, nombre FROM supervisores ORDER BY nombre
                 <option value="<?= $s['id'] ?>" <?= $s['id'] == $entrevista['supervisor_id'] ? 'selected' : '' ?>><?= $s['nombre'] ?></option>
             <?php endforeach; ?>
         </select>
+        <div class="mb-3">
+        <label for="tipo_supervisor" class="form-label">Tipo de Supervisor</label>
+        <select name="tipo_supervisor" class="form-select" required>
+            <option value="interno" <?= $tipo_supervisor == 'interno' ? 'selected' : '' ?>>Interno</option>
+            <option value="externo" <?= $tipo_supervisor == 'externo' ? 'selected' : '' ?>>Externo</option>
+        </select>
+</div>
+
 
         <button class="btn btn-primary">Actualizar</button>
         <a class="btn btn-secondary" href="listar.php">Cancelar</a>

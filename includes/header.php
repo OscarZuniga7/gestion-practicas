@@ -24,7 +24,9 @@
         <li class="nav-item"><a class="nav-link" href="/gestion-practicas/informes/listar.php">Informes</a></li>
         <li class="nav-item"><a class="nav-link" href="/gestion-practicas/evaluaciones/listar.php">Evaluaciones</a></li>
         <li class="nav-item"><a class="nav-link" href="/gestion-practicas/entrevistas/listar.php">Entrevistas</a></li>
+        <li class="nav-item"><a class="nav-link" href="/gestion-practicas/reportes/alertas.php">Alertas</a></li>
       </ul>
+
     </div>
   </div>
 </nav>

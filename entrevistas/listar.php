@@ -13,6 +13,7 @@ include('../includes/header.php');
                 <th>ID</th>
                 <th>Estudiante</th>
                 <th>Supervisor</th>
+                <th>Tipo Supervisor</th>
                 <th>Fecha</th>
                 <th>Modalidad</th>
                 <th>Comentarios</th>
@@ -36,6 +37,7 @@ include('../includes/header.php');
                 <td><?= $fila['id'] ?></td>
                 <td><?= $fila['nombre_estudiante'] ?></td>
                 <td><?= $fila['nombre_supervisor'] ?></td>
+                <td><?= ucfirst($fila['tipo_supervisor']) ?></td>
                 <td><?= $fila['fecha'] ?></td>
                 <td><?= $fila['modalidad'] ?></td>
                 <td><?= $fila['comentarios'] ?></td>
