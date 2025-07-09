@@ -15,6 +15,14 @@ Este proyecto es una aplicación web desarrollada en **PHP**, **MySQL** y **Boot
   - Evaluaciones
   - **Entrevistas** (registro de reuniones entre docente y estudiante o con supervisor externo)
 
+  - ✅ **Nuevo módulo: Reportes de Alertas**
+  - Verifica automáticamente si hay:
+    - Informes vencidos no entregados.
+    - Evaluaciones vencidas no realizadas.
+    - Entrevistas no ejecutadas dentro del plazo esperado.
+  - Muestra un listado con color de advertencia para facilitar el seguimiento.
+  - Clasifica por responsable: estudiante, supervisor docente, supervisor externo.
+
 - Relaciones con integridad referencial:
   - Cada estudiante está vinculado a una empresa (`empresa_id`)
   - Cada supervisor externo también está vinculado a una empresa (`empresa_id`)
