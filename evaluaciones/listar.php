@@ -13,7 +13,9 @@ include('../includes/db.php');
 <body>
 <div class="container mt-5">
     <h2>Listado de Evaluaciones</h2>
-    <a href="crear.php" class="btn btn-primary mb-3">Nueva Evaluación</a>
+    <a href="crear.php" class="btn btn-primary mb-3 me-2">Nueva Evaluación</a>
+    <a href="evaluacion_rubrica.php" class="btn btn-success mb-3">Evaluar con Rúbrica</a>
+
 
     <table class="table table-bordered table-striped">
         <thead>

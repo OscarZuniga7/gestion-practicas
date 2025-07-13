@@ -5,11 +5,15 @@ include('../includes/header.php');
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $estudiante_id = $_POST['estudiante_id'];
     $hito_id = $_POST['hito_id'];
-    $supervisor = $_POST['supervisor'];
+    $supervisor_id = $_POST['supervisor_id'];
     $nota = $_POST['nota'];
     $fecha_evaluacion = $_POST['fecha_evaluacion'];
     $observaciones = $_POST['observaciones'];
     $archivo_url = $_POST['archivo_url'];
+
+    $stmt = $pdo->prepare("SELECT nombre FROM supervisores WHERE id = ?");
+    $stmt->execute([$supervisor_id]);
+    $supervisor = $stmt->fetchColumn();
 
     $sql = "INSERT INTO evaluaciones (estudiante_id, hito_id, supervisor, nota, fecha_evaluacion, observaciones, archivo)
             VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -22,6 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 $estudiantes = $pdo->query("SELECT id, nombre FROM estudiantes ORDER BY nombre")->fetchAll();
 $hitos = $pdo->query("SELECT id, nombre FROM hitos ORDER BY id")->fetchAll();
+$supervisores = $pdo->query("SELECT id, nombre, tipo FROM supervisores ORDER BY nombre")->fetchAll();
 ?>
 
 <!DOCTYPE html>
@@ -46,8 +51,8 @@ $hitos = $pdo->query("SELECT id, nombre FROM hitos ORDER BY id")->fetchAll();
 
         <div class="mb-3">
             <label class="form-label">Hito</label>
-            <select name="hito_id" class="form-select">
-                <option value="">-- Ninguno --</option>
+            <select name="hito_id" class="form-select" required>
+                <option value="">-- Seleccione --</option>
                 <?php foreach ($hitos as $h): ?>
                     <option value="<?= $h['id'] ?>"><?= htmlspecialchars($h['nombre']) ?></option>
                 <?php endforeach; ?>
@@ -56,7 +61,12 @@ $hitos = $pdo->query("SELECT id, nombre FROM hitos ORDER BY id")->fetchAll();
 
         <div class="mb-3">
             <label class="form-label">Supervisor</label>
-            <input type="text" name="supervisor" class="form-control" required>
+            <select name="supervisor_id" class="form-select" required>
+                <option value="">-- Seleccione --</option>
+                <?php foreach ($supervisores as $s): ?>
+                    <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nombre']) ?> (<?= $s['tipo'] ?>)</option>
+                <?php endforeach; ?>
+            </select>
         </div>
 
         <div class="mb-3">
@@ -71,12 +81,12 @@ $hitos = $pdo->query("SELECT id, nombre FROM hitos ORDER BY id")->fetchAll();
 
         <div class="mb-3">
             <label class="form-label">Observaciones</label>
-            <textarea name="observaciones" class="form-control"></textarea>
+            <textarea name="observaciones" class="form-control" rows="3"></textarea>
         </div>
 
         <div class="mb-3">
             <label class="form-label">URL del archivo PDF</label>
-            <input type="url" name="archivo_url" class="form-control" placeholder="https://...">
+            <input type="url" name="archivo_url" class="form-control" placeholder="https://..." required>
         </div>
 
         <button type="submit" class="btn btn-success">Guardar</button>
