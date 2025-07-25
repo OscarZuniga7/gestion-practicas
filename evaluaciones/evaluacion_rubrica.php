@@ -2,15 +2,47 @@
 require_once('../includes/db.php');
 include('../includes/header.php');
 
-// Obtener datos iniciales
+$evaluacion_id = $_GET['evaluacion_id'] ?? null;
+$rubrica_id = $_GET['rubrica_id'] ?? null;
+$modo_edicion = false;
+$selected_estudiante = null;
+$selected_hito = null;
+$selected_supervisor = null;
+$niveles_actuales = [];
+$observaciones_actuales = '';
+
+if ($evaluacion_id) {
+    $modo_edicion = true;
+    // Obtener rubrica_id desde los criterios
+    $stmt = $pdo->prepare("SELECT c.rubrica_id, e.estudiante_id, e.hito_id, e.supervisor, e.observaciones
+                           FROM evaluaciones e
+                           JOIN evaluaciones_criterios ec ON ec.evaluacion_id = e.id
+                           JOIN criterios c ON c.id = ec.criterio_id
+                           WHERE e.id = ? LIMIT 1");
+    $stmt->execute([$evaluacion_id]);
+    $datos_edicion = $stmt->fetch();
+
+    if ($datos_edicion) {
+        $rubrica_id = $datos_edicion['rubrica_id'];
+        $selected_estudiante = $datos_edicion['estudiante_id'];
+        $selected_hito = $datos_edicion['hito_id'];
+        $selected_supervisor = $datos_edicion['supervisor'];
+        $observaciones_actuales = $datos_edicion['observaciones'];
+
+        // Cargar niveles por criterio existentes
+        $stmt = $pdo->prepare("SELECT criterio_id, nivel_logro_id FROM evaluaciones_criterios WHERE evaluacion_id = ?");
+        $stmt->execute([$evaluacion_id]);
+        $niveles_actuales = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
+}
+
 $estudiantes = $pdo->query("SELECT id, nombre FROM estudiantes ORDER BY nombre")->fetchAll();
 $hitos = $pdo->query("SELECT id, nombre FROM hitos ORDER BY id")->fetchAll();
 $supervisores = $pdo->query("SELECT id, nombre, tipo FROM supervisores ORDER BY nombre")->fetchAll();
 $rubricas = $pdo->query("SELECT id, nombre FROM rubricas ORDER BY id")->fetchAll();
 
-// Si se selecciona una rúbrica
-$rubrica_id = $_GET['rubrica_id'] ?? null;
 $criterios = [];
+$niveles = [];
 if ($rubrica_id) {
     $stmt = $pdo->prepare("SELECT * FROM criterios WHERE rubrica_id = ? ORDER BY orden");
     $stmt->execute([$rubrica_id]);
@@ -56,12 +88,17 @@ if ($rubrica_id) {
 <?php if ($rubrica_id && $criterios): ?>
 <form method="POST" action="guardar_evaluacion.php">
     <input type="hidden" name="rubrica_id" value="<?= $rubrica_id ?>">
+    <?php if ($modo_edicion): ?>
+        <input type="hidden" name="evaluacion_id" value="<?= $evaluacion_id ?>">
+    <?php endif; ?>
 
     <div class="mb-3">
         <label class="form-label">Estudiante</label>
         <select name="estudiante_id" class="form-select" required>
             <?php foreach ($estudiantes as $e): ?>
-                <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nombre']) ?></option>
+                <option value="<?= $e['id'] ?>" <?= ($e['id'] == $selected_estudiante) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($e['nombre']) ?>
+                </option>
             <?php endforeach; ?>
         </select>
     </div>
@@ -70,7 +107,9 @@ if ($rubrica_id) {
         <label class="form-label">Hito</label>
         <select name="hito_id" class="form-select" required>
             <?php foreach ($hitos as $h): ?>
-                <option value="<?= $h['id'] ?>"><?= htmlspecialchars($h['nombre']) ?></option>
+                <option value="<?= $h['id'] ?>" <?= ($h['id'] == $selected_hito) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($h['nombre']) ?>
+                </option>
             <?php endforeach; ?>
         </select>
     </div>
@@ -79,7 +118,9 @@ if ($rubrica_id) {
         <label class="form-label">Supervisor</label>
         <select name="supervisor_id" class="form-select" required>
             <?php foreach ($supervisores as $s): ?>
-                <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nombre']) ?> (<?= $s['tipo'] ?>)</option>
+                <option value="<?= $s['id'] ?>" <?= ($s['id'] == $selected_supervisor) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($s['nombre']) ?> (<?= $s['tipo'] ?>)
+                </option>
             <?php endforeach; ?>
         </select>
     </div>
@@ -93,13 +134,12 @@ if ($rubrica_id) {
             <select name="criterios[<?= $c['id'] ?>]" class="form-select nivel-logro" onchange="calcularTotal()" required>
                 <option value="">-- Seleccionar nivel --</option>
                 <?php foreach ($niveles as $n):
-                    // Buscar el puntaje específico desde criterios_niveles
                     $stmt = $pdo->prepare("SELECT puntaje FROM criterios_niveles WHERE criterio_id = ? AND nivel_logro_id = ?");
                     $stmt->execute([$c['id'], $n['id']]);
                     $puntaje = $stmt->fetchColumn();
-                    if ($puntaje === false) continue; // ignorar si no hay combinación
+                    if ($puntaje === false) continue;
                 ?>
-                    <option value="<?= $n['id'] ?>" data-puntaje="<?= $puntaje ?>">
+                    <option value="<?= $n['id'] ?>" data-puntaje="<?= $puntaje ?>" <?= (isset($niveles_actuales[$c['id']]) && $niveles_actuales[$c['id']] == $n['id']) ? 'selected' : '' ?>>
                         <?= $n['nombre'] ?> (<?= $puntaje ?> pts)
                     </option>
                 <?php endforeach; ?>
@@ -109,7 +149,7 @@ if ($rubrica_id) {
 
     <div class="mb-3">
         <label class="form-label">Observaciones generales</label>
-        <textarea name="observaciones" class="form-control" rows="3"></textarea>
+        <textarea name="observaciones" class="form-control" rows="3"><?= htmlspecialchars($observaciones_actuales) ?></textarea>
     </div>
 
     <div class="mb-3 fw-bold">

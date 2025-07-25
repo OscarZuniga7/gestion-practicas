@@ -113,6 +113,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <a href="listar.php" class="btn btn-secondary">Volver</a>
     </form>
 </div>
+<?php
+// Verifica si la evaluación tiene criterios evaluados por rúbrica
+$sql_rubrica = "SELECT COUNT(*) FROM evaluaciones_criterios WHERE evaluacion_id = ?";
+$stmt_rubrica = $pdo->prepare($sql_rubrica);
+$stmt_rubrica->execute([$id]);
+$tiene_rubrica = $stmt_rubrica->fetchColumn() > 0;
+
+if ($tiene_rubrica):
+    echo '<a href="../evaluaciones/evaluacion_rubrica.php?evaluacion_id=' . $id . '" class="btn btn-warning mt-3">Editar Rúbrica</a>';
+endif;
+?>
 <?php include('../includes/footer.php'); ?>
 </body>
 </html>
