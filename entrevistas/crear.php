@@ -1,81 +1,105 @@
 <?php
-// entrevistas/crear.php
-include('../includes/db.php');
-include('../includes/header.php');
-$tipo_supervisor = 'interno';
+require_once '../includes/db.php';
+include '../includes/header.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $stmt = $pdo->prepare("INSERT INTO entrevistas (estudiante_id, hito_id, fecha, modalidad, evidencia_url, comentarios, supervisor_id, tipo_supervisor)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+// Cargar datos para los selects (usa los nombres REALES de tablas)
+$estudiantes = $pdo->query("
+    SELECT id, nombre, rut 
+    FROM estudiantes 
+    ORDER BY nombre ASC
+")->fetchAll(PDO::FETCH_ASSOC);
 
-    $stmt->execute([
-        $_POST['estudiante_id'],
-        $_POST['hito_id'],
-        $_POST['fecha'],
-        $_POST['modalidad'],
-        $_POST['evidencia_url'],
-        $_POST['comentarios'],
-        $_POST['supervisor_id'] ?: null
-    ]);
+$hitos = $pdo->query("
+    SELECT id, descripcion 
+    FROM hitos 
+    ORDER BY id ASC
+")->fetchAll(PDO::FETCH_ASSOC);
 
-    header('Location: listar.php');
-    exit();
-}
+$supervisoresExternos = $pdo->query("
+    SELECT id, nombre 
+    FROM supervisores 
+    WHERE tipo = 'externo'
+    ORDER BY nombre ASC
+")->fetchAll(PDO::FETCH_ASSOC);
 
-$estudiantes = $pdo->query("SELECT id, nombre FROM estudiantes ORDER BY nombre");
-$hitos = $pdo->query("SELECT id, nombre FROM hitos ORDER BY nombre");
-$supervisores = $pdo->query("SELECT id, nombre, tipo FROM supervisores ORDER BY nombre");
+// Fecha por defecto = hoy
+$hoy = date('Y-m-d');
 ?>
 
-<div class="container mt-5">
-    <h2>Registrar Entrevista</h2>
-    <form method="post">
-        <label class="form-label">Estudiante</label>
-        <select class="form-select mb-2" name="estudiante_id" required>
-            <option value="">Seleccione estudiante</option>
-            <?php foreach ($estudiantes as $e): ?>
-                <option value="<?= $e['id'] ?>"><?= $e['nombre'] ?></option>
-            <?php endforeach; ?>
-        </select>
+<div class="container">
+    <h2>Registrar Entrevista con Supervisor Externo</h2>
 
-        <label class="form-label">Hito</label>
-        <select class="form-select mb-2" name="hito_id" required>
-            <option value="">Seleccione hito</option>
-            <?php foreach ($hitos as $h): ?>
-                <option value="<?= $h['id'] ?>"><?= $h['nombre'] ?></option>
-            <?php endforeach; ?>
-        </select>
-
-        <label class="form-label">Fecha</label>
-        <input class="form-control mb-2" type="date" name="fecha" required>
-
-        <label class="form-label">Modalidad</label>
-        <input class="form-control mb-2" type="text" name="modalidad" placeholder="presencial, online, etc.">
-
-        <label class="form-label">URL Evidencia (SharePoint, PDF, etc.)</label>
-        <input class="form-control mb-2" type="url" name="evidencia_url" placeholder="https://...">
-
-        <label class="form-label">Comentarios</label>
-        <textarea class="form-control mb-2" name="comentarios"></textarea>
-
-        <label class="form-label">Supervisor</label>
-        <select class="form-select mb-3" name="supervisor_id">
-            <option value="">Sin supervisor</option>
-            <?php foreach ($supervisores as $s): ?>
-                <option value="<?= $s['id'] ?>"><?= $s['nombre'] ?></option>
-            <?php endforeach; ?>
-        </select>
+    <form action="guardar.php" method="post">
         <div class="mb-3">
-        <label for="tipo_supervisor" class="form-label">Tipo de Supervisor</label>
-        <select name="tipo_supervisor" class="form-select" required>
-            <option value="interno" <?= $tipo_supervisor == 'interno' ? 'selected' : '' ?>>Interno</option>
-            <option value="externo" <?= $tipo_supervisor == 'externo' ? 'selected' : '' ?>>Externo</option>
-        </select>
-</div>
+            <label class="form-label">Estudiante</label>
+            <select name="estudiante_id" class="form-select" required>
+                <option value="">Seleccione…</option>
+                <?php foreach ($estudiantes as $e): ?>
+                    <option value="<?= $e['id'] ?>">
+                        <?= htmlspecialchars($e['nombre']) ?> (<?= htmlspecialchars($e['rut']) ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
 
-        <button class="btn btn-success">Guardar</button>
-        <a class="btn btn-secondary" href="listar.php">Cancelar</a>
+        <div class="mb-3">
+            <label class="form-label">Hito asociado</label>
+            <select name="hito_id" class="form-select" required>
+                <option value="">Seleccione…</option>
+                <?php foreach ($hitos as $h): ?>
+                    <option value="<?= $h['id'] ?>">
+                        <?= htmlspecialchars($h['descripcion']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Supervisor externo</label>
+            <select name="supervisor_id" class="form-select" required>
+                <option value="">Seleccione…</option>
+                <?php foreach ($supervisoresExternos as $s): ?>
+                    <option value="<?= $s['id'] ?>">
+                        <?= htmlspecialchars($s['nombre']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-sm-4">
+                <label class="form-label">Fecha de entrevista</label>
+                <input type="date" name="fecha" value="<?= $hoy ?>" class="form-control" required>
+            </div>
+            <div class="col-sm-4">
+                <label class="form-label">Modalidad (opcional)</label>
+                <select name="modalidad" class="form-select">
+                    <option value="">—</option>
+                    <option value="presencial">Presencial</option>
+                    <option value="online">Online</option>
+                    <option value="mixta">Mixta</option>
+                </select>
+            </div>
+            <div class="col-sm-4">
+                <label class="form-label">Tipo de supervisor</label>
+                <input type="text" class="form-control" value="externo" disabled>
+                <input type="hidden" name="tipo_supervisor" value="externo">
+            </div>
+        </div>
+
+        <div class="mb-3 mt-3">
+            <label class="form-label">Comentarios</label>
+            <textarea name="comentarios" class="form-control" rows="3" placeholder="Resumen de la conversación, acuerdos, compromisos, etc."></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">URL de evidencia (PDF/Doc/Audio en SharePoint)</label>
+            <input type="url" name="evidencia_url" class="form-control" placeholder="https://…">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Guardar entrevista</button>
+        <a href="listar.php" class="btn btn-secondary">Volver</a>
     </form>
 </div>
 
-<?php include('../includes/footer.php'); ?>
+<?php include '../includes/footer.php'; ?>
