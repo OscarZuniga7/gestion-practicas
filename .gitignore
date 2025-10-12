@@ -43,3 +43,4 @@ vendor/
 sql/*
 !sql/
 !sql/**/*.sql
+README_legacy.md
