@@ -1,181 +1,240 @@
-# Sistema de Gestión de Prácticas
+# Gestión de Prácticas — Reportes 202420
 
-Este proyecto es una aplicación web desarrollada en **PHP**, **MySQL** y **Bootstrap**, diseñada para gestionar de manera organizada la información relacionada con **prácticas profesionales de estudiantes universitarios**.
+Aplicación web en **PHP**, **MySQL** y **Bootstrap** para gestionar **prácticas profesionales** de estudiantes y generar reportes **Consolidado**, **Por Hito** y **Completo (hecho + pendientes)** con exportación a **XLS/CSV**.
 
----
-
-## 🧩 Funcionalidades actuales
-
-- CRUD completo de:
-  - Estudiantes
-  - Empresas
-  - Supervisores externos
-  - Informes de práctica
-  - Hitos de avance
-  - Evaluaciones
-  - **Entrevistas** (registro de reuniones entre docente y estudiante o con supervisor externo)
-
-  - ✅ **Nuevo módulo: Reportes de Alertas**
-  - Verifica automáticamente si hay:
-    - Informes vencidos no entregados.
-    - Evaluaciones vencidas no realizadas.
-    - Entrevistas no ejecutadas dentro del plazo esperado.
-  - Muestra un listado con color de advertencia para facilitar el seguimiento.
-  - Clasifica por responsable: estudiante, supervisor docente, supervisor externo.
-
-- Relaciones con integridad referencial:
-  - Cada estudiante está vinculado a una empresa (`empresa_id`)
-  - Cada supervisor externo también está vinculado a una empresa (`empresa_id`)
-  - Cada entrevista está vinculada a:
-    - un estudiante (`estudiante_id`)
-    - un hito (`hito_id`)
-    - un supervisor externo opcional (`supervisor_id`)
+> Esta versión incluye las vistas SQL y mejoras de dashboard para el período **202420**.
 
 ---
 
-## 🗂️ Estructura del Proyecto
+## 📚 Tabla de contenidos
+- [Características](#-características)
+- [Esquema de base de datos](#-esquema-de-base-de-datos)
+- [Estructura del proyecto](#-estructura-del-proyecto)
+- [Instalación](#-instalación)
+- [Vistas SQL de reportes](#-vistas-sql-de-reportes)
+- [Endpoints de reportes](#-endpoints-de-reportes)
+- [Dashboard](#-dashboard)
+- [Buenas prácticas del repo](#-buenas-prácticas-del-repo)
+- [Tags / Topics del repositorio](#-tags--topics-del-repositorio)
+- [Versionado (tags de git)](#-versionado-tags-de-git)
+- [Solución de problemas](#-solución-de-problemas)
+- [Autor y licencia](#-autor-y-licencia)
 
+---
+
+## ✨ Características
+
+- CRUD de **Estudiantes**, **Empresas**, **Supervisores**, **Hitos**, **Informes**, **Evaluaciones** y **Entrevistas**.
+- **Alertas** automáticas para vencimientos y pendientes.
+- **Reportes**:
+  - **Consolidado** (último por estudiante)
+  - **Por Hito** (todas las evaluaciones)
+  - **Completo** (hecho + pendientes por hito)
+  - Exportación a **XLS** y **CSV**.
+- Cálculo de rúbrica con corrección para **rúbricas 6 y 7** (LOGRO% × PONDERADOR).
+- Dashboard con **chips de pendientes** por periodo.
+
+---
+
+## 🧩 Esquema de base de datos
+
+Diagrama general (resumen):  
+
+```
+estudiantes ──┬─< informes >── hitos
+              ├─< evaluaciones >── hitos
+              ├─< entrevistas >── hitos
+              └── empresas
+
+evaluaciones ──< evaluaciones_criterios >── criterios ──< criterios_niveles
+criterios ──└── rubricas ──> hitos
+niveles_logro  (tabla catálogo)
+supervisores   (externos, opcional en entrevistas)
+actas_entrevista (detalle/actas por entrevista) 
+```
+
+**Tablas principales**  
+- `estudiantes(id, nombre, email, rut, asignatura, empresa_id, fecha_inicio, fecha_fin, ...)`
+- `empresas(id, nombre, rubro, direccion, email_contacto, ...)`
+- `hitos(id, nombre, descripcion)`
+- `informes(id, estudiante_id, hito_id, fecha_entrega, archivo, comentarios, ...)`
+- `evaluaciones(id, estudiante_id, hito_id, nota, fecha_registro, supervisor, archivo, ...)`
+- `evaluaciones_criterios(id, evaluacion_id, criterio_id, nivel_logro_id, puntaje_obtenido, comentario)`
+- `rubricas(id, nombre, hito_id, tipo_practica)`
+- `criterios(id, rubrica_id, nombre, orden, puntaje_max)`
+- `criterios_niveles(id, criterio_id, nivel_logro_id, puntaje)`
+- `niveles_logro(id, nombre, descripcion)`
+- `entrevistas(id, estudiante_id, hito_id, fecha, modalidad, comentarios, supervisor_id, evidencia_url)`
+- `actas_entrevista(id, entrevista_id, tipo_entrevista, eval_general, fortalezas, mejoras, ...)`
+- `supervisores(id, nombre, cargo, email, telefono, tipo, empresa_id)`
+
+> El PDF `gestion_practicas.pdf` contiene el diagrama más detallado.  
+
+**Índices recomendados (extracto)**  
+```
+-- consultas por último registro
+CREATE INDEX idx_inf_est_fech  ON informes(estudiante_id, fecha_entrega);
+CREATE INDEX idx_eval_est_fech ON evaluaciones(estudiante_id, fecha_registro);
+CREATE INDEX idx_ent_est_fech  ON entrevistas(estudiante_id, fecha);
+
+-- detalle evaluación
+CREATE INDEX idx_det_eval      ON evaluaciones_criterios(evaluacion_id);
+CREATE INDEX idx_critniv_crit  ON criterios_niveles(criterio_id, nivel_logro_id);
+```
+
+---
+
+## 🗂️ Estructura del proyecto
+
+```
 gestion-practicas/
-├── index.php
-├── includes/
-│ ├── db.php
-│ ├── header.php
-│ └── footer.php
-├── estudiantes/
-│ ├── listar.php
-│ ├── crear.php
-│ ├── editar.php
-│ └── eliminar.php
-├── empresas/
-│ ├── listar.php
-│ ├── crear.php
-│ ├── editar.php
-│ └── eliminar.php
-├── supervisores/
-│ ├── listar.php
-│ ├── crear.php
-│ ├── editar.php
-│ └── eliminar.php
-├── hitos/
-│ ├── listar.php
-│ ├── crear.php
-│ ├── editar.php
-│ └── eliminar.php
-├── informes/
-│ ├── listar.php
-│ ├── crear.php
-│ ├── editar.php
-│ └── eliminar.php
-├── evaluaciones/
-│ ├── listar.php
-│ ├── crear.php
-│ ├── editar.php
-│ └── eliminar.php
-├── entrevistas/
-│ ├── listar.php
-│ ├── crear.php
-│ ├── editar.php
-│ └── eliminar.php
-├── sql/
-│ ├── base_datos_inicial.sql
-│ ├── base_datos_hitos_informes_evaluaciones.sql
-│ └── base_datos_entrevistas.sql
-└── README.md
+├─ index.php                     # Dashboard con accesos a reportes
+├─ includes/
+│  ├─ db.php                     # NO versionado (local)
+│  └─ db.example.php             # plantilla de conexión (.env opcional)
+├─ reportes/
+│  ├─ exportar_informe.php              # Consolidado (último por estudiante)
+│  ├─ exportar_informe_hitos.php        # Por hito (todas las evaluaciones)
+│  └─ exportar_informe_completo.php     # Hecho + pendientes (por hito)
+├─ sql/
+│  ├─ base_datos_inicial.sql
+│  ├─ base_datos_hitos_informes_evaluaciones.sql
+│  ├─ base_datos_entrevistas.sql
+│  └─ vistas/
+│     ├─ vw_informe_supervision_ultimo.sql
+│     ├─ vw_informe_supervision_por_hito.sql
+│     └─ vw_informe_supervision_completo.sql
+└─ ...
+```
 
 ---
 
-## 🧪 Caso real de ejemplo incluido
+## 🛠️ Instalación
 
-En el archivo `base_datos_inicial.sql` se incluye el siguiente caso real modelado en el sistema:
+1. **Clonar**
+   ```bash
+   git clone https://github.com/<usuario>/gestion-practicas.git
+   cd gestion-practicas
+   ```
 
-### Estudiante:
-- **Nombre:** Nicolás Andrés Baeza Pereira
-- **RUT:** 20269725-9
-- **Programa:** UNAB12100
-- **Asignatura:** Práctica I
-- **Correo:** n.baezapereira@uandresbello.edu
-- **Empresa:** Universidad Andrés Bello
-- **Fecha Inicio / Fin:** 10-03-2025 a 02-06-2025
+2. **Configurar BD**
+   - Copia `includes/db.example.php` → `includes/db.php` y completa credenciales **o** crea un `.env`:
+     ```ini
+     DB_HOST=localhost
+     DB_PORT=3306
+     DB_NAME=gestion_practicas
+     DB_USER=root
+     DB_PASS=
+     DB_CHARSET=utf8mb4
+     DB_TZ=-03:00
+     ```
 
-### Empresa:
-- **Nombre:** Universidad Andrés Bello
-- **RUT:** 60803000-0
-- **Rubro:** Educación superior
-- **Dirección:** Av. República 239, Santiago
-- **Teléfono:** 226123456
+3. **Base de datos**
+   - Crea la BD `gestion_practicas` e importa los SQL base (carpeta `sql/`).  
+   - Crea las **VIEWS** (phpMyAdmin → SQL) pegando en este orden los archivos de `sql/vistas/`:
+     1. `vw_informe_supervision_ultimo.sql`
+     2. `vw_informe_supervision_por_hito.sql`
+     3. `vw_informe_supervision_completo.sql`
 
-### Supervisor Externo:
-- **Nombre:** Armando Tamponi
-- **Cargo:** Docente UNAB / Supervisor Externo
-- **Correo:** arm.munoz@uandresbello.edu
-- **Teléfono:** +56993997982
-- **Empresa asociada:** Universidad Andrés Bello
+   > Notas: en el consolidado se toma el **último por estudiante** (tiebreak por fecha y `id`).  
+   > Las rúbricas **6 y 7** calculan nota como **LOGRO% × PONDERADOR**.
 
----
-
-## 📝 Módulo de Entrevistas
-
-Este módulo permite registrar y consultar las entrevistas realizadas durante el proceso de práctica. Cada entrevista puede incluir:
-
-- Fecha de la entrevista
-- Modalidad (presencial, online, etc.)
-- Comentarios o notas breves
-- URL de evidencia (acta en PDF, enlace a SharePoint, etc.)
-- Asociación a un **estudiante**, un **hito** y opcionalmente un **supervisor externo**
-
-Además:
-
-- El sistema permite **ver el acta o evidencia** en una nueva pestaña si se trata de un enlace.
-- La tabla `entrevistas` está documentada en el archivo `sql/base_datos_entrevistas.sql`
+4. **Servidor**
+   - XAMPP: carpeta en `htdocs/` → `http://localhost/gestion-practicas/`
 
 ---
 
-## ⚙️ Cómo usar este sistema localmente
+## 🧮 Vistas SQL de reportes
 
-1. Clona o copia este repositorio en:  
-   `C:\xampp\htdocs\gestion-practicas`
+- `vw_informe_supervision_ultimo` → Consolidado (una fila por estudiante, último hito evaluado).  
+- `vw_informe_supervision_por_hito` → Una fila por **cada evaluación** (hito).  
+- `vw_informe_supervision_completo` → **Todo por hito** (realizado + **pendiente** en informes/evaluaciones/entrevistas).
 
-2. Abre [http://localhost/phpmyadmin](http://localhost/phpmyadmin) y:
-   - Crea la base de datos `gestion_practicas`
-   - Importa el archivo `sql/base_datos_inicial.sql`
-   - Importa también `sql/base_datos_hitos_informes_evaluaciones.sql` y `sql/base_datos_entrevistas.sql` si deseas utilizar los módulos extendidos
-
-3. Abre XAMPP y activa **Apache** y **MySQL**
-
-4. Accede al sistema en:  
-   [http://localhost/gestion-practicas](http://localhost/gestion-practicas)
+Cada archivo `.sql` contiene `DROP VIEW IF EXISTS ...; CREATE VIEW ...;` y comentarios.
 
 ---
 
-## 📚 Futuras extensiones sugeridas
+## 🔗 Endpoints de reportes
 
-- Registro de entrevistas y evaluaciones por parte del supervisor externo
-- Vinculación estudiante ↔ supervisor directamente (opcional)
-- Reportes exportables a PDF o Excel
-- Panel resumen tipo dashboard
+### 1) Consolidado (último por estudiante)
+```
+/reportes/exportar_informe.php?ini=YYYY-MM-DD&fin=YYYY-MM-DD
+  [&practica=PRACTICA%20I|PRACTICA%20II]
+  [&formato=xls|csv]
+```
+
+### 2) Por Hito (todas las evaluaciones)
+```
+/reportes/exportar_informe_hitos.php?ini=YYYY-MM-DD&fin=YYYY-MM-DD
+  [&practica=...]
+  [&estudiante_id=ID]
+  [&formato=xls|csv]
+```
+
+### 3) Completo (hecho + pendientes) por hito
+```
+/reportes/exportar_informe_completo.php?ini=YYYY-MM-DD&fin=YYYY-MM-DD
+  [&practica=...]
+  [&pendientes=1]
+  [&formato=xls|csv]
+```
 
 ---
 
-## 👨‍🏫 Autor
+## 📊 Dashboard
 
-Desarrollado por **Oscar Zúñiga** como solución práctica y adaptable para docentes universitarios a cargo de la supervisión de prácticas profesionales.
+- Tarjetas de conteo (Estudiantes, Empresas, Informes, Evaluaciones, Entrevistas).
+- **Sección Reportes** con accesos a Ver/XLS/CSV.
+- **Chips** con pendientes (informes/evaluaciones/entrevistas) calculados desde `vw_informe_supervision_completo`.  
+  Período por defecto configurable en `index.php` (`$iniDefault` / `$finDefault`).
 
 ---
 
-### 📎 Manejo de Archivos en Informes
+## ✅ Buenas prácticas del repo
 
-El sistema permite registrar archivos asociados a informes de práctica bajo dos modalidades:
+- **No versionar credenciales**: `includes/db.php`, `.env` están en `.gitignore`.
+- **Evidencias**: carpeta `documentos/` des-trackeada (solo local).
+- **SQL**: versionar todas las vistas en `sql/vistas/*.sql`.
+- (Opcional) conservar estructura con `documentos/.gitkeep` y regla:
+  ```
+  documentos/**
+  !documentos/.gitkeep
+  ```
 
-#### ✅ Opción 1: Archivos locales (modo tradicional)
-- Deben ubicarse en la carpeta `/archivos/` dentro del proyecto local.
-- En el formulario de creación/edición (`crear.php`, `editar.php`), basta con escribir el nombre del archivo, por ejemplo:
-  `hito1_constanza.pdf`
-- En la lista de informes (`listar.php`), el archivo se abrirá desde el servidor local al hacer clic.
+---
 
-#### ✅ Opción 2: Archivos externos (SharePoint, OneDrive, etc.)
-- Se debe pegar la **URL pública o compartida** del archivo, por ejemplo:
-  `https://uandresbelloedu.sharepoint.com/.../Informe_Practica1_Constanza.pdf`
-- El sistema detectará automáticamente si se trata de una URL y la abrirá correctamente en una nueva pestaña.
-- Ideal para archivos almacenados en OneDrive o SharePoint corporativo.
+## 🏷️ Tags / Topics del repositorio
 
-> 💡 Esta flexibilidad permite integrar almacenamiento local y en la nube, ideal para contextos universitarios o docentes que trabajan con plataformas institucionales.
+Sugeridos para GitHub (Settings → *Topics*):  
+`php`, `mysql`, `pdo`, `bootstrap`, `university`, `internships`, `educational`, `reporting`, `xlsx`, `csv`, `dashboard`, `rubrics`, `practicas`, `unab`
+
+---
+
+## 🔖 Versionado (tags de git)
+
+Crear un tag de release para esta versión de reportes:
+
+```bash
+git tag -a v202420-reportes -m "Reportes 202420: vistas SQL, exportadores XLS/CSV, dashboard y corrección rúbricas 6-7"
+git push origin v202420-reportes
+```
+
+> Recomendación: proteger la rama `main` para requerir PRs.
+
+---
+
+## 🛟 Solución de problemas
+
+- **Illegal mix of collations**: se evitó comparando por `IS NULL` en fechas. Asegurar `SET NAMES utf8mb4` en `db.php`.
+- **Duplicados en consolidado**: resuelto con desempate por `id` cuando hay misma fecha.
+- **Falta `includes/db.php`**: copiar desde `includes/db.example.php` o usar `.env`.
+- **Pull borra documentos locales**: asegurar `/documentos/` en `.gitignore` y ejecutar  
+  `git rm -r --cached documentos/` (mantiene archivos en disco).
+
+---
+
+## 👤 Autor y licencia
+
+**Oscar Zúñiga**.  
+Licencia: **MIT**.
+
