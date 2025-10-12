@@ -27,7 +27,9 @@ vendor/
 
 # --- Datos pesados / subidos ---
 /archivos/
-/documentos*/
+/documentos/
+# si tienes otras variantes: /documentos*/, etc.
+# ajusta según tu estructura real
 /actas/
 /informes/*/*.pdf
 *.xlsx
@@ -37,8 +39,7 @@ vendor/
 *.swp
 *.zip
 
-# --- SQL ---
-# Ignora todo dentro de sql/, pero permite cualquier .sql (también en subcarpetas)
+# --- SQL: versionar todos los .sql, también en subcarpetas ---
 sql/*
 !sql/
 !sql/**/*.sql
