@@ -24,6 +24,18 @@
         <li class="nav-item"><a class="nav-link" href="/gestion-practicas/informes/listar.php">Informes</a></li>
         <li class="nav-item"><a class="nav-link" href="/gestion-practicas/evaluaciones/listar.php">Evaluaciones</a></li>
         <li class="nav-item"><a class="nav-link" href="/gestion-practicas/entrevistas/listar.php">Entrevistas</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navReportes" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Reportes
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navReportes">
+            <li><a class="dropdown-item" href="/gestion-practicas/reportes/exportar_informe.php">Ver informe</a></li>
+            <li><a class="dropdown-item" href="/gestion-practicas/reportes/exportar_informe.php?ini=2025-03-01&fin=2025-08-31&formato=xls">Descargar XLS 202420</a></li>
+            <li><a class="dropdown-item" href="/gestion-practicas/reportes/exportar_informe.php?ini=2025-03-01&fin=2025-08-31&formato=csv">Descargar CSV 202420</a></li>
+            <li><a class="dropdown-item" href="/gestion-practicas/reportes/exportar_informe_hitos.php">Informe por Hito</a></li>
+            <li><a class="dropdown-item" href="/gestion-practicas/reportes/exportar_informe_completo.php">Informe Completo (hecho + pendientes)</a></li>
+          </ul>
+        </li>
         <li class="nav-item"><a class="nav-link" href="/gestion-practicas/reportes/alertas.php">Alertas</a></li>
         <li class="nav-item"><a class="nav-link" href="/gestion-practicas/informes/subir.php">Subir Informe</a></li>
       </ul>

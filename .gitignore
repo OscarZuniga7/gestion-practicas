@@ -1,36 +1,44 @@
-# Archivos del sistema
+# --- Sistema / SO ---
 .DS_Store
 Thumbs.db
 
-# Carpetas temporales
+# --- Temporales / cache ---
 tmp/
 temp/
 cache/
 
-# Archivos de configuración de editores
+# --- Editores / IDE ---
 .vscode/
 .idea/
 *.sublime-workspace
 *.sublime-project
 
-# Archivos de entorno o credenciales
-.env
-*.log
-
-# Bases de datos locales
-#*.sql
-*.sqlite
-#*.db
-# Ignorar todo en sql excepto archivos .sql
-sql/*
-!sql/*.sql
-
-
-# Carpetas del entorno local
+# --- Dependencias ---
 node_modules/
 vendor/
 
-# Otros archivos no deseados
+# --- Logs ---
+*.log
+
+# --- Config local / secretos ---
+/includes/db.php
+.env
+*.env
+
+# --- Datos pesados / subidos ---
+/archivos/
+/documentos*/
+/actas/
+/informes/*/*.pdf
+*.xlsx
+*.xls
+*.csv
 *.bak
 *.swp
 *.zip
+
+# --- SQL ---
+# Ignora todo dentro de sql/, pero permite cualquier .sql (también en subcarpetas)
+sql/*
+!sql/
+!sql/**/*.sql
