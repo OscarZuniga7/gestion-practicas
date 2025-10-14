@@ -10,7 +10,7 @@ $estudiantes = $pdo->query("
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 $hitos = $pdo->query("
-    SELECT id, descripcion 
+    SELECT id, nombre 
     FROM hitos 
     ORDER BY id ASC
 ")->fetchAll(PDO::FETCH_ASSOC);
@@ -48,7 +48,7 @@ $hoy = date('Y-m-d');
                 <option value="">Seleccione…</option>
                 <?php foreach ($hitos as $h): ?>
                     <option value="<?= $h['id'] ?>">
-                        <?= htmlspecialchars($h['descripcion']) ?>
+                        <?= htmlspecialchars($h['nombre']) ?>
                     </option>
                 <?php endforeach; ?>
             </select>
