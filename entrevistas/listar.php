@@ -7,21 +7,47 @@ $ok  = $_GET['ok']  ?? null;
 $msg = $_GET['msg'] ?? null;
 
 /*
-  Traer entrevistas + contexto + estado de acta + rúbrica sugerida
-  - LEFT JOIN en supervisor para no perder entrevistas sin supervisor asignado
-  - Rúbrica sugerida: por hito y tipo de supervisor, con fallback a 'común'
+ Seleccionamos 1 rúbrica por entrevista:
+ - Coincidencia exacta por tipo_supervisor -> prioridad 0
+ - Si no hay, cae a 'común' -> prioridad 1
+ - Filtramos además por práctica del estudiante (I/II) según est.asignatura
 */
 $sql = "
+WITH rubrica_candidata AS (
+    SELECT
+        e.id AS entrevista_id,
+        r.id AS rubrica_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY e.id
+            ORDER BY
+                CASE WHEN r.tipo_practica = e.tipo_supervisor THEN 0 ELSE 1 END,
+                r.id
+        ) AS rn
+    FROM entrevistas e
+    JOIN estudiantes est ON est.id = e.estudiante_id
+    JOIN rubricas r
+      ON r.hito_id = e.hito_id
+     AND r.practica = CASE
+                        WHEN est.asignatura LIKE '%II%' THEN 'II'
+                        ELSE 'I'
+                      END
+     AND (r.tipo_practica = e.tipo_supervisor OR r.tipo_practica = 'común')
+)
+
 SELECT 
     e.id,
     DATE_FORMAT(e.fecha,'%Y-%m-%d') AS fecha,
     e.comentarios,
     e.evidencia_url,
     e.tipo_supervisor,                          -- 'interno' | 'externo'
+
     est.id  AS estudiante_id,
     est.nombre AS nombre_estudiante,
+    est.asignatura AS practica_estudiante,      -- útil para debug/validación
+
     h.id   AS hito_id,
     h.descripcion AS descripcion_hito,
+
     COALESCE(s.nombre, '—') AS nombre_supervisor,
 
     -- Acta (si existe)
@@ -29,18 +55,19 @@ SELECT
     a.tipo_entrevista AS acta_tipo,
     a.acta_pdf_url    AS acta_pdf_url,
 
-    -- Rúbrica sugerida para este hito/tipo (o 'común')
-    r.id AS rubrica_id
+    -- Rúbrica sugerida (única)
+    rc.rubrica_id
 FROM entrevistas e
-JOIN estudiantes est   ON est.id = e.estudiante_id
-JOIN hitos h           ON h.id   = e.hito_id
-LEFT JOIN supervisores s ON s.id = e.supervisor_id
+JOIN estudiantes est     ON est.id = e.estudiante_id
+JOIN hitos h             ON h.id   = e.hito_id
+LEFT JOIN supervisores s ON s.id   = e.supervisor_id
 LEFT JOIN actas_entrevista a ON a.entrevista_id = e.id
-LEFT JOIN rubricas r
-  ON r.hito_id = e.hito_id
- AND (r.tipo_practica = e.tipo_supervisor OR r.tipo_practica = 'común')
+LEFT JOIN rubrica_candidata rc
+       ON rc.entrevista_id = e.id
+      AND rc.rn = 1
 ORDER BY e.fecha DESC, e.id DESC
 ";
+
 $entrevistas = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -83,11 +110,10 @@ $entrevistas = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
             <td><?= htmlspecialchars($e['nombre_estudiante']) ?></td>
             <td><?= htmlspecialchars($e['descripcion_hito']) ?></td>
             <td><?= htmlspecialchars($e['nombre_supervisor']) ?></td>
-            <td>
-              <span class="badge bg-dark"><?= htmlspecialchars(ucfirst($e['tipo_supervisor'])) ?></span>
-            </td>
+            <td><span class="badge bg-dark"><?= htmlspecialchars(ucfirst($e['tipo_supervisor'])) ?></span></td>
             <td><?= htmlspecialchars($e['fecha']) ?></td>
             <td style="max-width:360px"><?= nl2br(htmlspecialchars($e['comentarios'])) ?></td>
+
             <td>
               <?php if (!empty($e['evidencia_url'])): ?>
                 <a href="<?= htmlspecialchars($e['evidencia_url']) ?>" target="_blank" rel="noopener noreferrer">Ver evidencia</a>
@@ -112,19 +138,17 @@ $entrevistas = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
             </td>
 
             <td class="d-flex flex-wrap gap-2">
-              <!-- Flujo recomendado: ir a Evaluaciones prefiltrado -->
+              <!-- Flujo recomendado → va al listado de evaluaciones prefiltrado -->
               <a class="btn btn-sm btn-success"
                  href="../evaluaciones/listar.php?estudiante_id=<?= (int)$e['estudiante_id'] ?>&hito_id=<?= (int)$e['hito_id'] ?>&tipo=<?= urlencode($e['tipo_supervisor']) ?>">
                 Evaluar
               </a>
 
-              <!-- Alternativa directa a Evaluar con Rúbrica (descomenta si quieres mostrarla) -->
-              <?php ?>
+              <!-- Acceso directo a la rúbrica única seleccionada -->
               <a class="btn btn-sm btn-outline-success"
                  href="../evaluaciones/evaluacion_rubrica.php?estudiante_id=<?= (int)$e['estudiante_id'] ?>&hito_id=<?= (int)$e['hito_id'] ?>&tipo=<?= urlencode($e['tipo_supervisor']) ?>&rubrica_id=<?= (int)($e['rubrica_id'] ?? 0) ?>">
                 Evaluar con rúbrica
               </a>
-              <?php ?>
 
               <a href="editar.php?id=<?= (int)$e['id'] ?>" class="btn btn-sm btn-primary">Editar</a>
 
