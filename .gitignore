@@ -39,8 +39,8 @@ vendor/
 *.swp
 *.zip
 
-# --- SQL: versionar todos los .sql, también en subcarpetas ---
-sql/*
-!sql/
-!sql/**/*.sql
+
 README_legacy.md
+
+
+
