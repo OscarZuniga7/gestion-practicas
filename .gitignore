@@ -39,7 +39,7 @@ vendor/
 *.swp
 *.zip
 
-
+vendor/
 README_legacy.md
 
 

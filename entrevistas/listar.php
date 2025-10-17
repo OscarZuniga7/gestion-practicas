@@ -156,6 +156,11 @@ $entrevistas = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
                  onclick="return confirm('¿Eliminar esta entrevista? Esta acción no se puede deshacer.');">
                  Eliminar
               </a>
+              <a class="btn btn-sm btn-dark"
+                 href="../actas/express.php?entrevista_id=<?= (int)$e['id'] ?>">
+                 Resumen exprés
+              </a>
+
             </td>
           </tr>
         <?php endforeach; ?>
