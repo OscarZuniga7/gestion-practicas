@@ -18,6 +18,7 @@ $entrevista_id  = isset($_POST['entrevista_id']) ? (int)$_POST['entrevista_id'] 
 
 $tipo_entrevista = $_POST['tipo_entrevista'] ?? null;          // 'intermedia' | 'final'
 $link_vc         = trim((string)($_POST['link_vc'] ?? ''));
+$acta_pdf_url = trim((string)($_POST['acta_pdf_url'] ?? ''));
 $fecha_firma     = $_POST['fecha_firma'] ?? '';                 // 'YYYY-MM-DD' | '' | null
 $firmar_hoy      = isset($_POST['firmar_hoy']) ? 1 : 0;         // opcional en tus formularios
 
@@ -83,6 +84,7 @@ try {
     $sql = "UPDATE actas_entrevista
                SET tipo_entrevista = ?,
                    link_vc         = ?,
+                   acta_pdf_url    = ?,
                    fecha_firma     = ?,
                    eval_general    = ?,
                    fortalezas      = ?,
@@ -99,6 +101,7 @@ try {
     $pdo->prepare($sql)->execute([
       $tipo_entrevista,
       ($link_vc !== '' ? $link_vc : null),
+      ($acta_pdf_url !== '' ? $acta_pdf_url : null),
       $fecha_firma_norm,
       $eval_general, $fortalezas, $mejoras, $sugerencias,
       $recibi_practicantes, $recibi_obs, $convenio, $convenio_obs, $otras_vinc, $otras_vinc_det,
@@ -133,14 +136,15 @@ try {
     }
 
     $sql = "INSERT INTO actas_entrevista
-              (entrevista_id, tipo_entrevista, link_vc, fecha_firma,
+              (entrevista_id, tipo_entrevista, link_vc, acta_pdf_url, fecha_firma,
                eval_general, fortalezas, mejoras, sugerencias,
                recibi_practicantes, recibi_obs, convenio, convenio_obs, otras_vinc, otras_vinc_det,
                obs_docente)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     $pdo->prepare($sql)->execute([
       $entrevista_id, $tipo_entrevista,
       ($link_vc !== '' ? $link_vc : null),
+      ($acta_pdf_url !== '' ? $acta_pdf_url : null),
       $fecha_firma_norm,
       $eval_general, $fortalezas, $mejoras, $sugerencias,
       $recibi_practicantes, $recibi_obs, $convenio, $convenio_obs, $otras_vinc, $otras_vinc_det,

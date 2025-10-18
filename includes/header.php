@@ -34,6 +34,7 @@
             <li><a class="dropdown-item" href="/gestion-practicas/reportes/exportar_informe.php?ini=2025-03-01&fin=2025-08-31&formato=csv">Descargar CSV 202420</a></li>
             <li><a class="dropdown-item" href="/gestion-practicas/reportes/exportar_informe_hitos.php">Informe por Hito</a></li>
             <li><a class="dropdown-item" href="/gestion-practicas/reportes/exportar_informe_completo.php">Informe Completo (hecho + pendientes)</a></li>
+            <li><a class="dropdown-item" href="/gestion-practicas/reportes/exportar_consolidado.php">Exportar Consolidado</a></li>
           </ul>
         </li>
         <li class="nav-item"><a class="nav-link" href="/gestion-practicas/reportes/alertas.php">Alertas</a></li>
