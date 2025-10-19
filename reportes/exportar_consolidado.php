@@ -12,55 +12,58 @@ $formato    = $_GET['formato']    ?? 'html';      // html | csv | xls
 $debug      = isset($_GET['debug']) ? (int)$_GET['debug'] : 0;
 
 // --------- SQL base ---------
-// Cambia el nombre de la vista si corresponde
 $sql = "SELECT
-          estudiante, rut, estudiante_email,
+          estudiante,
+          rut,
+          estudiante_email,
           empresa,
-          practica, hito,
-          DATE_FORMAT(fecha_inicio,'%d-%m-%Y') AS inicio,
-          DATE_FORMAT(fecha_fin,'%d-%m-%Y')    AS fin,
-          -- Informes
-          estado_informe_h1, informe_h1_url, nota_h1_texto,
-          estado_informe_h2, informe_h2_url, nota_h2_texto,
-          -- Entrevista / Acta
-          estado_entrevista, entrevista_fecha,
+          practica,
+          DATE_FORMAT(inicio,'%d-%m-%Y') AS inicio,
+          DATE_FORMAT(fin,'%d-%m-%Y')    AS fin,
+
+          /* Informes */
+          informe_hito1_url,
+          informe_hito1_fecha,
+          /* REEMPLAZO: ahora el texto de nota */
+          nota_rubrica_texto_hito1_interno AS nota_hito1_interno,
+          informe_hito2_url,
+          informe_hito2_fecha,
+          nota_rubrica_texto_hito2_interno AS nota_hito2_interno,
+
+          /* Entrevista / Acta */
+          entrevista_fecha,
+          evidencia_url,
           acta_pdf_url,
-          grabacion_url,
-          -- Supervisor externo
-          supervisor_ext_nombre, supervisor_ext_email, supervisor_ext_telefono,
-          -- Marca temporal
-          DATE_FORMAT(ultima_actualizacion,'%d-%m-%Y') AS ultima_actualizacion
+
+          /* Supervisor externo */
+          supervisor_externo_nombre,
+          supervisor_externo_email,
+          supervisor_externo_telefono,
+          supervisor_externo_cargo
+
         FROM vw_reporte_consolidado";
 
-// --------- WHERE dinámico bien formado ---------
+// --------- WHERE dinámico ---------
 $w = [];
 $p = [];
-
-// rango por fecha_fin (o ajusta a la columna que uses de corte)
-$w[]       = "fecha_fin BETWEEN :ini AND :fin";
+$w[]       = "fin BETWEEN :ini AND :fin";
 $p[':ini'] = $ini;
 $p[':fin'] = $fin;
 
 if ($practica !== '') {
-  $w[]             = "practica = :practica";
-  $p[':practica']  = $practica; // <-- nombre del placeholder = clave en $p
+  $w[]            = "practica = :practica";
+  $p[':practica'] = $practica;
 }
 
 if ($soloCerr) {
-  // ejemplo: solo casos con acta o con notas en ambos hitos (ajusta a tu lógica)
-  $w[] = "(acta_pdf_url IS NOT NULL OR (nota_h1_texto IS NOT NULL AND nota_h2_texto IS NOT NULL))";
+  $w[] = "(acta_pdf_url IS NOT NULL OR (nota_hito1_interno IS NOT NULL OR nota_hito2_interno IS NOT NULL))";
 }
 
-if ($w) {
-  $sql .= " WHERE " . implode(" AND ", $w);
-}
+if ($w) $sql .= " WHERE " . implode(" AND ", $w);
+$sql .= " ORDER BY estudiante, practica";
 
-$sql .= " ORDER BY estudiante, practica, hito";
-
-// --------- Ejecutar de forma segura ---------
+// --------- Ejecutar ---------
 $stmt = $pdo->prepare($sql);
-
-// DEBUG opcional para cazar HY093 si te vuelve a pasar
 if ($debug) {
   echo "<pre><b>SQL:</b>\n" . $sql . "\n\n<b>Params:</b>\n";
   var_dump($p);
@@ -102,6 +105,23 @@ if ($formato === 'xls') {
   echo "</table>";
   exit;
 }
+
+// --------- Helpers HTML (solo para la tabla web) ---------
+function renderLinkOrDash(?string $url, string $label): string {
+  $url = trim((string)$url);
+  if ($url === '') return '—';
+  $safe = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+  $lab  = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
+  return '<a href="'.$safe.'" target="_blank" rel="noopener noreferrer">'.$lab.'</a>';
+}
+
+// Mapeo de columnas URL => etiqueta visible
+$linkLabels = [
+  'informe_hito1_url' => 'Ver informe hito 1',
+  'informe_hito2_url' => 'Ver informe hito 2',
+  'evidencia_url'     => 'Ver evidencia',
+  'acta_pdf_url'      => 'Ver Acta',
+];
 ?>
 <!doctype html>
 <html lang="es">
@@ -109,6 +129,10 @@ if ($formato === 'xls') {
 <meta charset="utf-8">
 <title>Consolidado de Prácticas (todo en uno)</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<style>
+  .table a { text-decoration: none; }
+  .table a:hover { text-decoration: underline; }
+</style>
 </head>
 <body class="p-4">
 <div class="container">
@@ -146,7 +170,7 @@ if ($formato === 'xls') {
   </form>
 
   <div class="table-responsive">
-    <table class="table table-sm table-striped table-bordered">
+    <table class="table table-sm table-striped table-bordered align-middle">
       <thead class="table-light">
         <tr>
           <?php if (!empty($rows)) foreach (array_keys($rows[0]) as $c) echo "<th>".htmlspecialchars($c)."</th>"; ?>
@@ -156,7 +180,14 @@ if ($formato === 'xls') {
         <?php if (!empty($rows)) {
           foreach ($rows as $r) {
             echo "<tr>";
-            foreach ($r as $v) echo "<td>".htmlspecialchars((string)$v)."</td>";
+            foreach ($r as $k => $v) {
+              // Si es una de las columnas de URL, mostrar el link "limpio"
+              if (isset($linkLabels[$k])) {
+                echo "<td>" . renderLinkOrDash($v, $linkLabels[$k]) . "</td>";
+              } else {
+                echo "<td>" . htmlspecialchars((string)$v) . "</td>";
+              }
+            }
             echo "</tr>";
           }
         } else {
