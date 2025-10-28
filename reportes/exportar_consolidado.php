@@ -30,6 +30,10 @@ $sql = "SELECT
           informe_hito2_fecha,
           nota_rubrica_texto_hito2_interno AS nota_hito2_interno,
 
+          /* NUEVO: Detalle rúbrica (PDF) por hito */
+          detalle_rubrica_hito1_url,
+          detalle_rubrica_hito2_url,
+
           /* Entrevista / Acta */
           entrevista_fecha,
           evidencia_url,
@@ -119,35 +123,45 @@ function mailOrDash(?string $mail): string {
   return '<a href="mailto:'.$safe.'">'.$safe.'</a>';
 }
 
+/* --------- Mapeo de columnas con enlaces “Ver …” --------- */
 $linkLabels = [
-  'informe_hito1_url' => 'Ver informe hito 1',
-  'informe_hito2_url' => 'Ver informe hito 2',
-  'evidencia_url'     => 'Ver evidencia',
-  'acta_pdf_url'      => 'Ver Acta',
+  'informe_hito1_url'         => 'Ver informe hito 1',
+  'informe_hito2_url'         => 'Ver informe hito 2',
+  'detalle_rubrica_hito1_url' => 'Ver detalle rúbrica H1',
+  'detalle_rubrica_hito2_url' => 'Ver detalle rúbrica H2',
+  'evidencia_url'             => 'Ver evidencia',
+  'acta_pdf_url'              => 'Ver Acta',
 ];
 
 /* --------- Títulos más “humanos” (opcional) --------- */
 $pretty = [
-  'estudiante'                 => 'Estudiante',
-  'rut'                        => 'RUT',
-  'estudiante_email'           => 'Email estudiante',
-  'empresa'                    => 'Empresa',
-  'practica'                   => 'Práctica',
-  'inicio'                     => 'Inicio',
-  'fin'                        => 'Fin',
-  'informe_hito1_url'          => 'Informe H1',
-  'informe_hito1_fecha'        => 'Fecha H1',
-  'nota_hito1_interno'         => 'Nota rúbrica H1 (int.)',
-  'informe_hito2_url'          => 'Informe H2',
-  'informe_hito2_fecha'        => 'Fecha H2',
-  'nota_hito2_interno'         => 'Nota rúbrica H2 (int.)',
-  'entrevista_fecha'           => 'Entrevista',
-  'evidencia_url'              => 'Evidencia',
-  'acta_pdf_url'               => 'Acta',
-  'supervisor_externo_nombre'  => 'Supervisor externo',
-  'supervisor_externo_email'   => 'Email supervisor',
-  'supervisor_externo_telefono'=> 'Fono supervisor',
-  'supervisor_externo_cargo'   => 'Cargo supervisor',
+  'estudiante'                   => 'Estudiante',
+  'rut'                          => 'RUT',
+  'estudiante_email'             => 'Email estudiante',
+  'empresa'                      => 'Empresa',
+  'practica'                     => 'Práctica',
+  'inicio'                       => 'Inicio',
+  'fin'                          => 'Fin',
+
+  'informe_hito1_url'            => 'Informe H1',
+  'informe_hito1_fecha'          => 'Fecha H1',
+  'nota_hito1_interno'           => 'Nota rúbrica H1 (int.)',
+
+  'informe_hito2_url'            => 'Informe H2',
+  'informe_hito2_fecha'          => 'Fecha H2',
+  'nota_hito2_interno'           => 'Nota rúbrica H2 (int.)',
+
+  'detalle_rubrica_hito1_url'    => 'Detalle rúbrica H1',
+  'detalle_rubrica_hito2_url'    => 'Detalle rúbrica H2',
+
+  'entrevista_fecha'             => 'Entrevista',
+  'evidencia_url'                => 'Evidencia',
+  'acta_pdf_url'                 => 'Acta',
+
+  'supervisor_externo_nombre'    => 'Supervisor externo',
+  'supervisor_externo_email'     => 'Email supervisor',
+  'supervisor_externo_telefono'  => 'Fono supervisor',
+  'supervisor_externo_cargo'     => 'Cargo supervisor',
 ];
 
 ?>
