@@ -6,7 +6,7 @@ include('../includes/header.php');
    Parámetros de entrada
 ---------------------------- */
 $evaluacion_id       = isset($_GET['evaluacion_id']) ? (int)$_GET['evaluacion_id'] : 0;
-$rubrica_id          = isset($_GET['rubrica_id'])     ? (int)$_GET['rubrica_id']     : 0;
+$rubrica_id          = isset($_GET['rubrica_id'])     ? (int)$_GET['rubrica_id']   : 0;
 
 $selected_estudiante = isset($_GET['estudiante_id'])  ? (int)$_GET['estudiante_id']  : null;
 $selected_hito       = isset($_GET['hito_id'])        ? (int)$_GET['hito_id']        : null;
@@ -23,7 +23,7 @@ $observaciones_actuales  = '';
 if ($evaluacion_id > 0) {
     $modo_edicion = true;
 
-    // Recuperar rubrica y contexto desde la evaluación existente
+    // Recuperar rúbrica y contexto desde la evaluación existente
     $stmt = $pdo->prepare("
         SELECT c.rubrica_id, ev.estudiante_id, ev.hito_id, ev.supervisor, ev.observaciones
         FROM evaluaciones ev
@@ -32,11 +32,11 @@ if ($evaluacion_id > 0) {
         WHERE ev.id = ? LIMIT 1
     ");
     $stmt->execute([$evaluacion_id]);
-    if ($row = $stmt->fetch()) {
+    if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $rubrica_id             = (int)$row['rubrica_id'];
         $selected_estudiante    = (int)$row['estudiante_id'];
         $selected_hito          = (int)$row['hito_id'];
-        $selected_supervisor    = is_numeric($row['supervisor']) ? (int)$row['supervisor'] : null; // por si supervisor guarda texto
+        $selected_supervisor    = is_numeric($row['supervisor']) ? (int)$row['supervisor'] : null;
         $observaciones_actuales = (string)$row['observaciones'];
 
         // Cargar niveles ya elegidos
@@ -84,12 +84,100 @@ if ($rubrica_id <= 0 && $selected_hito) {
 }
 
 /* ---------------------------
-   Datos para combos
+   Tipo de evaluación (interno/externo) tras conocer rúbrica
 ---------------------------- */
-$estudiantes  = $pdo->query("SELECT id, nombre FROM estudiantes ORDER BY nombre")->fetchAll();
-$hitos        = $pdo->query("SELECT id, nombre FROM hitos ORDER BY id")->fetchAll();
-$supervisores = $pdo->query("SELECT id, nombre, tipo FROM supervisores ORDER BY nombre")->fetchAll();
-$rubricas     = $pdo->query("SELECT id, nombre FROM rubricas ORDER BY id")->fetchAll();
+$rubrica_tipo = null;
+if ($rubrica_id > 0) {
+    $q = $pdo->prepare("SELECT tipo_practica FROM rubricas WHERE id = ?");
+    $q->execute([$rubrica_id]);
+    $rubrica_tipo = $q->fetchColumn() ?: null; // 'interno' | 'externo' | 'común'
+}
+$tipo_eval = null;
+if ($rubrica_tipo && $rubrica_tipo !== 'común') {
+    $tipo_eval = $rubrica_tipo;
+} elseif (!empty($tipo_param)) {
+    $tipo_eval = $tipo_param; // viene de GET ?tipo=interno|externo
+}
+
+/* ---------------------------
+   Datos para combos base
+---------------------------- */
+$estudiantes  = $pdo->query("SELECT id, nombre FROM estudiantes ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
+$hitos        = $pdo->query("SELECT id, nombre FROM hitos ORDER BY id")->fetchAll(PDO::FETCH_ASSOC);
+$rubricas     = $pdo->query("SELECT id, nombre FROM rubricas ORDER BY id")->fetchAll(PDO::FETCH_ASSOC);
+
+/* ---------------------------
+   Sugerencias de supervisor por defecto
+---------------------------- */
+$default_supervisor_interno = null;
+$default_supervisor_externo = null;
+
+if ($selected_estudiante) {
+    // interno por defecto desde la ficha del estudiante
+    $q = $pdo->prepare("SELECT supervisor_interno_id FROM estudiantes WHERE id=?");
+    $q->execute([$selected_estudiante]);
+    $default_supervisor_interno = $q->fetchColumn() ?: null;
+
+    // externo más reciente, idealmente del mismo hito; si no hay, el último de cualquiera
+    if ($selected_hito) {
+        $q = $pdo->prepare("
+            SELECT supervisor_id
+            FROM entrevistas
+            WHERE estudiante_id = ? AND hito_id = ? AND tipo_supervisor = 'externo'
+            ORDER BY fecha DESC, id DESC
+            LIMIT 1
+        ");
+        $q->execute([$selected_estudiante, $selected_hito]);
+        $default_supervisor_externo = $q->fetchColumn() ?: null;
+    }
+    if (!$default_supervisor_externo) {
+        $q = $pdo->prepare("
+            SELECT supervisor_id
+            FROM entrevistas
+            WHERE estudiante_id = ? AND tipo_supervisor = 'externo'
+            ORDER BY fecha DESC, id DESC
+            LIMIT 1
+        ");
+        $q->execute([$selected_estudiante]);
+        $default_supervisor_externo = $q->fetchColumn() ?: null;
+    }
+}
+
+// Si estoy creando (no edición) y no vino supervisor elegido, propongo uno
+if (!$modo_edicion && empty($selected_supervisor)) {
+    if ($tipo_eval === 'interno' && $default_supervisor_interno) {
+        $selected_supervisor = (int)$default_supervisor_interno;
+    } elseif ($tipo_eval === 'externo' && $default_supervisor_externo) {
+        $selected_supervisor = (int)$default_supervisor_externo;
+    }
+}
+
+/* ---------------------------
+   Catálogo de supervisores (filtrado por tipo)
+   En modo edición, si el supervisor guardado no calza con el filtro,
+   lo añadimos para que aparezca preseleccionado.
+---------------------------- */
+$supervisores = [];
+if ($tipo_eval === 'interno' || $tipo_eval === 'externo') {
+    $stSup = $pdo->prepare("SELECT id, nombre, tipo FROM supervisores WHERE tipo = ? ORDER BY nombre");
+    $stSup->execute([$tipo_eval]);
+    $supervisores = $stSup->fetchAll(PDO::FETCH_ASSOC);
+
+    if ($modo_edicion && $selected_supervisor) {
+        $ids = array_column($supervisores, 'id');
+        if (!in_array($selected_supervisor, $ids, true)) {
+            $q = $pdo->prepare("SELECT id, nombre, tipo FROM supervisores WHERE id = ?");
+            $q->execute([$selected_supervisor]);
+            if ($row = $q->fetch(PDO::FETCH_ASSOC)) {
+                array_unshift($supervisores, $row);
+            }
+        }
+    }
+} else {
+    // sin tipo definido (rúbrica 'común'): mostrar todos
+    $supervisores = $pdo->query("SELECT id, nombre, tipo FROM supervisores ORDER BY nombre")
+                        ->fetchAll(PDO::FETCH_ASSOC);
+}
 
 /* ---------------------------
    Criterios y niveles
@@ -101,13 +189,13 @@ if ($rubrica_id > 0) {
     // criterios de la rúbrica
     $st = $pdo->prepare("SELECT id, nombre, orden FROM criterios WHERE rubrica_id = ? ORDER BY orden");
     $st->execute([$rubrica_id]);
-    $criterios = $st->fetchAll();
+    $criterios = $st->fetchAll(PDO::FETCH_ASSOC);
 
     if ($criterios) {
         $ids = array_column($criterios, 'id');
         $in  = implode(',', array_fill(0, count($ids), '?'));
 
-        // niveles disponibles por criterio (join evita consultas por opción)
+        // niveles disponibles por criterio
         $sql = "
           SELECT cn.criterio_id, nl.id AS nivel_id, nl.nombre AS nivel_nombre, cn.puntaje
           FROM criterios_niveles cn
@@ -117,7 +205,7 @@ if ($rubrica_id > 0) {
         ";
         $st2 = $pdo->prepare($sql);
         $st2->execute($ids);
-        while ($r = $st2->fetch()) {
+        while ($r = $st2->fetch(PDO::FETCH_ASSOC)) {
             $cid = (int)$r['criterio_id'];
             if (!isset($nivelesPorCriterio[$cid])) $nivelesPorCriterio[$cid] = [];
             $nivelesPorCriterio[$cid][] = [
@@ -169,12 +257,12 @@ if ($selected_hito) {
 
 <h2 class="mb-3">Evaluación por Rúbrica</h2>
 
-<?php if ($ctx_est || $ctx_hito || $tipo_param): ?>
+<?php if ($ctx_est || $ctx_hito || $tipo_eval): ?>
   <div class="alert alert-info d-flex justify-content-between align-items-center">
     <div>
       <?php if ($ctx_est): ?>Estudiante: <strong><?= htmlspecialchars($ctx_est) ?></strong> &nbsp;<?php endif; ?>
       <?php if ($ctx_hito): ?>| Hito: <strong><?= htmlspecialchars($ctx_hito) ?></strong> &nbsp;<?php endif; ?>
-      <?php if ($tipo_param): ?>| Tipo: <strong><?= htmlspecialchars(ucfirst($tipo_param)) ?></strong><?php endif; ?>
+      <?php if ($tipo_eval): ?>| Tipo: <strong><?= htmlspecialchars(ucfirst($tipo_eval)) ?></strong><?php endif; ?>
     </div>
     <div>
       <a href="evaluacion_rubrica.php" class="btn btn-sm btn-outline-secondary">Limpiar</a>
@@ -241,14 +329,32 @@ if ($selected_hito) {
     </div>
 
     <div class="col-md-3">
-      <label class="form-label">Supervisor</label>
+      <label class="form-label">
+        Supervisor
+        <?php if ($tipo_eval): ?>
+          <span class="badge bg-secondary ms-1"><?= htmlspecialchars(ucfirst($tipo_eval)) ?></span>
+        <?php else: ?>
+          <span class="text-muted small">(todos)</span>
+        <?php endif; ?>
+      </label>
       <select name="supervisor_id" class="form-select" required>
-        <?php foreach ($supervisores as $s): ?>
-          <option value="<?= (int)$s['id'] ?>" <?= ($selected_supervisor && $s['id']==$selected_supervisor) ? 'selected' : '' ?>>
-            <?= htmlspecialchars($s['nombre']) ?> (<?= htmlspecialchars($s['tipo']) ?>)
-          </option>
-        <?php endforeach; ?>
+        <?php if (!$supervisores): ?>
+          <option value="">— No hay supervisores para este tipo —</option>
+        <?php else: ?>
+          <?php foreach ($supervisores as $s): 
+                $sel = ($selected_supervisor && (int)$s['id'] === (int)$selected_supervisor) ? 'selected' : '';
+          ?>
+            <option value="<?= (int)$s['id'] ?>" <?= $sel ?>>
+              <?= htmlspecialchars($s['nombre']) ?> (<?= htmlspecialchars($s['tipo']) ?>)
+            </option>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </select>
+      <?php if ($tipo_eval === 'interno' && $default_supervisor_interno): ?>
+        <div class="form-text">Sugerido desde la ficha del estudiante.</div>
+      <?php elseif ($tipo_eval === 'externo' && $default_supervisor_externo): ?>
+        <div class="form-text">Sugerido desde la entrevista más reciente.</div>
+      <?php endif; ?>
     </div>
   </div>
 
@@ -284,6 +390,12 @@ if ($selected_hito) {
   </div>
 
   <button type="submit" class="btn btn-success">Guardar Evaluación</button>
+  <?php if ($modo_edicion && $evaluacion_id): ?>
+  <a class="btn btn-outline-danger ms-2"
+     href="pdf_detalle.php?evaluacion_id=<?= (int)$evaluacion_id ?>&download=1">
+    Descargar PDF rúbrica
+  </a>
+  <?php endif; ?>
   <a href="listar.php" class="btn btn-secondary">Cancelar</a>
 </form>
 <?php endif; ?>
