@@ -39,13 +39,22 @@ $sql = "SELECT
           evidencia_url,
           acta_pdf_url,
 
+          /* Evaluación externa */
+          nota_hito1_externo,
+          DATE_FORMAT(fecha_hito1_externo,'%d-%m-%Y') AS fecha_hito1_externo,
+          pdf_hito1_externo_url,
+
+          nota_hito2_externo,
+          DATE_FORMAT(fecha_hito2_externo,'%d-%m-%Y') AS fecha_hito2_externo,
+          pdf_hito2_externo_url,
+
           /* Supervisor externo */
           supervisor_externo_nombre,
           supervisor_externo_email,
           supervisor_externo_telefono,
           supervisor_externo_cargo
 
-        FROM vw_reporte_consolidado";
+        FROM vw_reporte_consolidado_ext";
 
 $w = [];
 $p = [];
@@ -132,6 +141,10 @@ $linkLabels = [
   'evidencia_url'             => 'Ver evidencia',
   'acta_pdf_url'              => 'Ver Acta',
 ];
+$linkLabels += [
+  'pdf_hito1_externo_url' => 'Ver rúbrica externa H1',
+  'pdf_hito2_externo_url' => 'Ver rúbrica externa H2',
+];
 
 /* --------- Títulos más “humanos” (opcional) --------- */
 $pretty = [
@@ -162,6 +175,15 @@ $pretty = [
   'supervisor_externo_email'     => 'Email supervisor',
   'supervisor_externo_telefono'  => 'Fono supervisor',
   'supervisor_externo_cargo'     => 'Cargo supervisor',
+];
+$pretty += [
+  'nota_hito1_externo'     => 'Nota rúbrica H1 (ext.)',
+  'fecha_hito1_externo'    => 'Fecha eval. H1 (ext.)',
+  'pdf_hito1_externo_url'  => 'Rúbrica externa H1',
+
+  'nota_hito2_externo'     => 'Nota rúbrica H2 (ext.)',
+  'fecha_hito2_externo'    => 'Fecha eval. H2 (ext.)',
+  'pdf_hito2_externo_url'  => 'Rúbrica externa H2',
 ];
 
 ?>
